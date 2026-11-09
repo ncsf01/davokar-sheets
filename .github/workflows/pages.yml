@@ -1,0 +1,47 @@
+# Publishes the offline demo (demo/ folder) to GitHub Pages.
+# Result: https://ncsf01.github.io/davokar-sheets/
+name: Deploy demo to GitHub Pages
+
+# When to run: on every push to main that changes the demo or this file,
+# or manually from the "Actions" tab (workflow_dispatch).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "demo/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# Minimum permissions: read the code, write to Pages, and prove the
+# deployment comes from this repository (id-token).
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment at a time; a newer push cancels an older run.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest          # a fresh Linux machine provided by GitHub
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download the repository
+        uses: actions/checkout@v5
+
+      - name: Set up GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Package the demo folder
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: demo
+
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
