@@ -1,0 +1,68 @@
+{# characters/new.html: form to create a character. Handled by characters.new().
+
+   `options` comes from race_options() in characters.py: one entry per valid
+   race choice. Humans appear twice per culture, once for each free trait
+   they can pick (e.g. Ambrian with Contacts, Ambrian with Privileged).
+   <optgroup> groups those entries under a heading inside the dropdown.
+
+   `races` is the RACES dict, used here to list each race's traits. #}
+{% extends "base.html" %}
+
+{% block title %}New character{% endblock %}
+
+{% block content %}
+<section class="auth-box card">
+  <h1>New character</h1>
+
+  <form method="post" class="form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label class="field">
+      <span>Name</span>
+      <input type="text" name="name" value="{{ form.name }}" maxlength="100" required autofocus>
+    </label>
+
+    <label class="field">
+      <span>Race</span>
+      <select name="race">
+        <optgroup label="Human">
+          {% for o in options if races[o.race].human %}
+            <option value="{{ o.value }}" {% if form.race == o.value %}selected{% endif %}>
+              {{ o.race }}, with {{ o.trait }}
+            </option>
+          {% endfor %}
+        </optgroup>
+        {% for o in options if not races[o.race].human %}
+          <option value="{{ o.value }}" {% if form.race == o.value %}selected{% endif %}>
+            {{ o.race }} ({{ races[o.race].fixed | join(", ") }})
+          </option>
+        {% endfor %}
+      </select>
+      <small class="hint">
+        Humans pick one free trait. Changelings, goblins and ogres get their listed traits for free.
+      </small>
+    </label>
+
+    <label class="check">
+      <input type="checkbox" name="optional" {% if form.optional %}checked{% endif %}>
+      <span>
+        Start with the race's optional trait at novice level:
+        Shapeshifter (changeling), Survival Instinct (goblin) or Robust (ogre).
+        <small class="hint">Costs 10 experience, like an ability. Ignored for humans.</small>
+      </span>
+    </label>
+
+    <label class="field">
+      <span>Occupation</span>
+      <input type="text" name="occupation" value="{{ form.occupation }}" maxlength="100" placeholder="e.g. Treasure hunter">
+    </label>
+
+    <p class="hint">
+      Every attribute starts at 10 (the 80-point total). The character gets 50 experience to spend,
+      plus camping gear, a dagger and a light armor.
+    </p>
+
+    <button class="btn btn-gold btn-block" type="submit">Create character</button>
+  </form>
+</section>
+{% endblock %}

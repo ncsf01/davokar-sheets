@@ -1,0 +1,22 @@
+{# characters/list.html: all characters of the logged-in user.
+   Rendered by characters.index(). #}
+{% extends "base.html" %}
+
+{% block title %}My characters{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1 class="page-title">My characters</h1>
+  <a class="btn btn-gold" href="{{ url_for('characters.new') }}">+ New character</a>
+</div>
+
+{% if characters %}
+  <section class="card">
+    {% include "characters/_list.html" %}
+  </section>
+{% else %}
+  <section class="card">
+    <p class="empty">No characters yet. <a href="{{ url_for('characters.new') }}">Create your first one.</a></p>
+  </section>
+{% endif %}
+{% endblock %}

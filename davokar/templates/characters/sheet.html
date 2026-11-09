@@ -1,0 +1,47 @@
+{# characters/sheet.html: the character sheet. Rendered by characters.view().
+   Part A of step 2 shows a read-only summary built from the saved JSON.
+   Part B replaces this with the full interactive sheet (rules.js + sheet.js). #}
+{% extends "base.html" %}
+
+{% block title %}{{ character.name }}{% endblock %}
+
+{% block content %}
+{% set d = character.data %}
+
+<div class="page-head">
+  <div>
+    <h1 class="page-title">{{ character.name }}</h1>
+    <p class="muted">{{ [character.race, character.occupation] | select | join(" · ") or "No race or occupation" }}</p>
+  </div>
+  <a class="btn btn-ghost" href="{{ url_for('characters.delete', character_id=character.id) }}">Delete…</a>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><h2>Attributes</h2></div>
+    {# dictsort sorts the attributes alphabetically: accurate, cunning, ... #}
+    <dl class="kv">
+      {% for key, value in d.attrs | dictsort %}
+        <dt>{{ key | capitalize }}</dt><dd>{{ value }}</dd>
+      {% endfor %}
+    </dl>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Abilities &amp; traits</h2></div>
+    {% if d.abilities %}
+      <ul class="plain">
+        {% for a in d.abilities %}
+          <li>{{ a.name }} <small class="muted">· {{ a.cat }}</small></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">None yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<p class="hint" style="margin-top:16px">
+  The full interactive sheet (automatic calculations, tabs, dice) arrives in the next part of step 2.
+</p>
+{% endblock %}

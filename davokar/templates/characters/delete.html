@@ -1,0 +1,18 @@
+{# characters/delete.html: confirmation before deleting a character.
+   The real delete happens only when this form is submitted (POST). #}
+{% extends "base.html" %}
+
+{% block title %}Delete {{ character.name }}{% endblock %}
+
+{% block content %}
+<section class="auth-box card">
+  <h1>Delete {{ character.name }}?</h1>
+  <p>This removes the character sheet permanently. It cannot be undone.</p>
+
+  <form method="post" class="actions">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-danger" type="submit">Delete permanently</button>
+    <a class="btn" href="{{ url_for('characters.view', character_id=character.id) }}">Cancel</a>
+  </form>
+</section>
+{% endblock %}

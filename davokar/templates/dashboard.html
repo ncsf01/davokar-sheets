@@ -1,5 +1,6 @@
 {# dashboard.html: home page for logged-in users.
-   The lists are empty placeholders until step 2 (characters and tables). #}
+   `characters` comes from main.index(): the 5 most recently edited sheets.
+   The tables list stays a placeholder until step 3. #}
 {% extends "base.html" %}
 
 {% block title %}Dashboard{% endblock %}
@@ -11,8 +12,14 @@
   <section class="card">
     <div class="card-head">
       <h2>My characters</h2>
+      <a class="btn btn-sm" href="{{ url_for('characters.new') }}">+ New</a>
     </div>
-    <p class="empty">No characters yet. Character creation arrives in the next step.</p>
+    {% if characters %}
+      {% include "characters/_list.html" %}
+      <p class="card-foot"><a href="{{ url_for('characters.index') }}">See all characters</a></p>
+    {% else %}
+      <p class="empty">No characters yet. <a href="{{ url_for('characters.new') }}">Create your first one.</a></p>
+    {% endif %}
   </section>
 
   <section class="card">

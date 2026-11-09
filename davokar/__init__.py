@@ -31,8 +31,10 @@ def create_app(config_class="davokar.config.DevelopmentConfig"):
     # Blueprints are groups of routes defined in their own files. They only
     # become reachable after being registered on this app instance.
     from davokar.auth import bp as auth_bp
+    from davokar.characters import bp as characters_bp
     from davokar.main import bp as main_bp
     app.register_blueprint(auth_bp)
+    app.register_blueprint(characters_bp)
     app.register_blueprint(main_bp)
 
     return app

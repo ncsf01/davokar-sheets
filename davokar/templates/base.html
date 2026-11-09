@@ -38,7 +38,8 @@
       <nav class="nav-links" aria-label="Main">
         {% if g.user %}
           <a href="{{ url_for('main.index') }}">Dashboard</a>
-          {# Characters and Tables links arrive in step 2. #}
+          <a href="{{ url_for('characters.index') }}">Characters</a>
+          {# Tables link arrives in step 3. #}
         {% endif %}
       </nav>
 
