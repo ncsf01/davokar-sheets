@@ -1,0 +1,22 @@
+# Development database: a MariaDB server running in a Docker container.
+# Start:  docker compose up -d     Stop:  docker compose down
+# Values come from the .env file in this folder (docker compose reads it automatically).
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      # On the first start, the image creates this database and this user.
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      # host:container. 127.0.0.1 means only this computer can connect.
+      - "127.0.0.1:${DB_PORT}:3306"
+    volumes:
+      # Named volume: data survives "docker compose down" and restarts.
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

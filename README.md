@@ -1,30 +1,144 @@
+**English** · [Português (Brasil)](README.pt-BR.md)
+
 # Davokar Sheets
 
-Character sheets for the **Symbaroum** tabletop RPG, inspired by D&D Beyond and Demiplane.
-Derived values (Toughness, Pain Threshold, Defense, Armor, Corruption, Experience) are calculated
-automatically from attributes, abilities and equipment.
+Online character sheets for the **Symbaroum** tabletop RPG, inspired by D&D Beyond and Demiplane.
 
-> Unofficial fan project. Symbaroum is a trademark of Free League Publishing.
-> This repository ships **only the names** of abilities, powers, rituals and traits.
-> Rules text is not included: each table imports its own compendium JSON.
+The sheet does the math for you: **Toughness, Pain Threshold, Defense, Armor, Corruption and
+Experience** are calculated from attributes, abilities, powers and equipment. Players create
+accounts, join their group's *table* with an invite code and share dice rolls.
 
-## Versions
+> **Unofficial fan project.** Symbaroum is a trademark of Free League Publishing.
+> This repository contains **only the names** of abilities, powers, rituals and traits, never the
+> rules text from the books. Each table imports its own compendium file to see the descriptions.
 
-| Folder | What it is | Status |
+---
+
+## Two versions
+
+| | **Demo** (`demo/`) | **App** (`davokar/`) |
 |---|---|---|
-| `demo/` | Offline "lite" version. Runs in the browser, saves to `localStorage`, imports/exports character JSON. No server needed. | ✅ working |
-| `app/` | Flask + MariaDB version with accounts, tables (campaigns) and shared dice rolls. | 🚧 planned |
-| `docker/` | Docker setup: 2 app hosts × 2 containers, Nginx load balancing, MariaDB primary + replica. | 🚧 planned |
+| Runs on | any browser, no installation | a server (Flask + MariaDB) |
+| Data saved in | the browser (`localStorage`) | the database |
+| Accounts and tables | no | yes |
+| Share characters | export / import a `.json` file | automatic, inside the table |
+
+The demo is also the fallback when there is no server available.
+
+---
+
+## Architecture (target)
+
+```
+                Elastic IP
+                    │
+        ┌───────────┴────────────┐
+   EC2 app-1                  EC2 app-2
+   Nginx (load balancer)      Nginx (standby)
+   ├─ container: Flask        ├─ container: Flask
+   └─ container: Flask        └─ container: Flask
+        └───────────┬────────────┘
+   EC2 db-1  ── replication ──►  EC2 db-2
+   MariaDB (primary)             MariaDB (replica)
+```
+
+- **Nginx** spreads requests across the four Flask containers and skips any that stop responding.
+- The **Elastic IP** is the site's fixed address. If app-1 fails, it is moved to app-2.
+- **MariaDB replication** keeps a full copy of the data on db-2.
+
+### How a request flows inside the app
+
+```
+Browser ──HTTP──► Werkzeug ──► Flask route (Python) ──► PyMySQL ──► MariaDB
+   ▲                                   │
+   └────────── HTML ◄── Jinja template ┘
+```
+
+- **Werkzeug** receives the HTTP request and builds the `request` object.
+- **Flask** routes the URL to a Python function (a *view*).
+- **PyMySQL** runs SQL queries against **MariaDB**.
+- **Jinja** fills an HTML template with the data and returns the finished page.
+
+---
+
+## Project structure
+
+```
+davokar-sheets/
+├── davokar/                 Flask package
+│   ├── __init__.py          create_app(): the application factory
+│   ├── config.py            settings read from environment variables
+│   ├── db.py                PyMySQL connection, query helpers, `init-db` command
+│   ├── schema.sql           CREATE TABLE statements
+│   ├── security.py          CSRF protection for forms
+│   ├── auth.py              blueprint: sign up, log in, log out
+│   ├── main.py              blueprint: home page and dashboard
+│   ├── templates/           Jinja templates (base.html holds navbar and footer)
+│   └── static/css/          stylesheet
+├── demo/                    offline version (no server)
+├── docker-compose.yml       development database (MariaDB in Docker)
+├── wsgi.py                  production entry point (Gunicorn)
+├── requirements.txt         Python dependencies
+├── .env.example             template for the .env file
+└── LICENSE                  AGPL-3.0
+```
+
+---
 
 ## Running the demo
 
-Open `demo/index.html` in a browser. That's it.
+Open `demo/index.html` in a browser. (The demo interface is still in Portuguese: it moves to the new
+English-first structure in a later step.)
 
-- **📖 Compêndio** → import a compendium JSON to see rules text.
-  Accepted formats: a flat list `[{name, category, tag, effect, tiers}]`
-  or a grouped object `{abilities, mystical_powers, rituals, traits}`.
-- **⋯ Mais → Exportar ficha** saves your character as a `.json` file; import it back from the same menu.
+- **📖 Compendium**: import a compendium JSON to see rules text. Accepted formats: a flat list
+  `[{name, category, tag, effect, tiers}]` or a grouped object `{abilities, mystical_powers, rituals, traits}`.
+- **⋯ More → Export**: saves the character as a `.json` file. Import it back from the same menu.
+
+---
+
+## Running the app locally
+
+**Requirements:** Python 3.10+, Docker with Docker Compose.
+
+```bash
+# 1. Settings: copy the template and edit the passwords
+cp .env.example .env
+
+# 2. Start the database (MariaDB in a container)
+docker compose up -d
+
+# 3. Python virtual environment and dependencies
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 4. Create the tables
+flask --app davokar init-db
+
+# 5. Start the development server
+flask --app davokar run --debug
+```
+
+Open http://127.0.0.1:5000.
+
+To stop the database: `docker compose down` (the data is kept in a Docker volume).
+
+---
+
+## Roadmap
+
+- [x] Offline demo with compendium import and character export
+- [x] Accounts: sign up, log in, log out
+- [ ] Characters saved in the database
+- [ ] Tables: create, invite code, members, shared compendium
+- [ ] Shared dice rolls
+- [ ] English / Portuguese language switch
+- [ ] Docker image for the app, Nginx load balancing
+- [ ] Deployment on AWS EC2 with MariaDB replication
+
+---
 
 ## License
 
-[AGPL-3.0](LICENSE)
+[GNU AGPL-3.0](LICENSE). You may use, study, change and share this code. If you run a modified
+version on a server that other people use, you must make its source code available to them.

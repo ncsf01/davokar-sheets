@@ -1,0 +1,25 @@
+{# dashboard.html: home page for logged-in users.
+   The lists are empty placeholders until step 2 (characters and tables). #}
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Welcome, {{ g.user.username }}</h1>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head">
+      <h2>My characters</h2>
+    </div>
+    <p class="empty">No characters yet. Character creation arrives in the next step.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>My tables</h2>
+    </div>
+    <p class="empty">You have not joined any table yet.</p>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{#
+  base.html: the layout shared by every page.
+
+  Other templates start with {% extends "base.html" %} and only fill the
+  blocks below. The navbar and footer are written once, here.
+
+  Blocks:
+    title    -> text shown in the browser tab
+    content  -> the page itself, inside <main>
+    scripts  -> optional <script> tags, loaded at the end of <body>
+
+  `g.user` is set by auth.load_logged_in_user() before every request:
+  it holds the logged-in user's row, or None for visitors.
+#}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} · Davokar Sheets</title>
+
+  {# Fonts from Google Fonts. Each font in style.css has local fallbacks
+     in case these do not load. #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700;800&family=Alegreya+Sans+SC:wght@500;700&display=swap">
+
+  {# url_for('static', ...) builds the correct path to files in davokar/static/. #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  {# ---------- Navbar ---------- #}
+  <header class="navbar">
+    <div class="navbar-inner">
+      <a class="brand" href="{{ url_for('main.index') }}">Davokar Sheets</a>
+
+      <nav class="nav-links" aria-label="Main">
+        {% if g.user %}
+          <a href="{{ url_for('main.index') }}">Dashboard</a>
+          {# Characters and Tables links arrive in step 2. #}
+        {% endif %}
+      </nav>
+
+      <div class="nav-user">
+        {% if g.user %}
+          <span class="nav-username">{{ g.user.username }}</span>
+          {# Logout is a form (POST + CSRF token), not a link. See auth.logout(). #}
+          <form action="{{ url_for('auth.logout') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost" type="submit">Log out</button>
+          </form>
+        {% else %}
+          <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Log in</a>
+          <a class="btn btn-gold" href="{{ url_for('auth.register') }}">Sign up</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    {# ---------- Flash messages ----------
+       Messages created in Python with flash("text", "category") are shown
+       once, on the next page rendered, then discarded. #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, message in messages %}
+            <p class="flash flash-{{ category }}" role="status">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {# ---------- Footer ---------- #}
+  <footer class="footer">
+    <p>
+      Davokar Sheets is an unofficial fan project.
+      Symbaroum is a trademark of Free League Publishing.
+    </p>
+    <p>
+      <a href="https://github.com/ncsf01/davokar-sheets">Source code</a> · AGPL-3.0
+    </p>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

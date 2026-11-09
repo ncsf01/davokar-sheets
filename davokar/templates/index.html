@@ -1,0 +1,33 @@
+{# index.html: landing page for visitors who are not logged in. #}
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Character sheets for Symbaroum</h1>
+  <p class="lead">
+    Create your character, join your group's table and let the sheet do the math:
+    Toughness, Pain Threshold, Defense, Armor, Corruption and Experience update on their own.
+  </p>
+  <div class="actions">
+    <a class="btn btn-gold btn-lg" href="{{ url_for('auth.register') }}">Create an account</a>
+    <a class="btn btn-lg" href="{{ url_for('auth.login') }}">Log in</a>
+  </div>
+</section>
+
+<section class="features">
+  <article class="card">
+    <h2>Automatic sheet</h2>
+    <p>Abilities, powers, weapons and armor feed the derived values directly.</p>
+  </article>
+  <article class="card">
+    <h2>Tables</h2>
+    <p>The Game Master creates a table and the players join with an invite code.</p>
+  </article>
+  <article class="card">
+    <h2>Your own compendium</h2>
+    <p>The site ships only with names. Each table imports its own compendium file to see the rules text.</p>
+  </article>
+</section>
+{% endblock %}
