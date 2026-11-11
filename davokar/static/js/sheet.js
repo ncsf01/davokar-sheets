@@ -205,14 +205,34 @@
     bootstrap.Toast.getOrCreateInstance($("#toast")).show();
   }
 
-  function addRoll(label, result, detail, kind) {
+  // the last 30 rolls stay in this browser, one list per character
+  const ROLLS_KEY = "davokar.rolls." + payload.id;
+  let rolls = [];
+
+  function loadRolls() {
+    try {
+      rolls = JSON.parse(localStorage.getItem(ROLLS_KEY) || "[]") || [];
+    } catch (e) {
+      rolls = [];
+    }
+    for (const roll of rolls.slice().reverse()) showRoll(roll);
+  }
+
+  function showRoll(roll) {
     const entry = $("#roll-entry").content.firstElementChild.cloneNode(true);
-    entry.classList.add(kind);
-    $(".roll-label", entry).textContent = label;
-    $(".roll-result", entry).textContent = result;
-    $(".roll-detail", entry).textContent = detail;
+    entry.classList.add(roll.kind);
+    $(".roll-label", entry).textContent = roll.label;
+    $(".roll-result", entry).textContent = roll.result;
+    $(".roll-detail", entry).textContent = roll.detail;
     $("#roll-empty").hidden = true;
     $("#roll-list").prepend(entry);
+  }
+
+  function addRoll(label, result, detail, kind) {
+    const roll = { label, result, detail, kind };
+    showRoll(roll);
+    rolls = [roll, ...rolls].slice(0, 30);
+    try { localStorage.setItem(ROLLS_KEY, JSON.stringify(rolls)); } catch (e) { /* storage blocked */ }
   }
 
   function testRoll(label, target, extra) {
@@ -392,6 +412,12 @@
       });
       saveAndReload(entry.dataset.name + " added.");
     },
+    "clear-rolls"() {
+      rolls = [];
+      try { localStorage.removeItem(ROLLS_KEY); } catch (e) { /* storage blocked */ }
+      for (const entry of $$("#roll-list .roll")) entry.remove();
+      $("#roll-empty").hidden = false;
+    },
     "shop-add"(el) { addFromShop(el, false); },
     "shop-buy"(el) { addFromShop(el, true); },
     "clear-compendium"() {
@@ -563,6 +589,7 @@
 
   loadCompendium();
   fillCompendiumTexts();
+  loadRolls();
   render();
   setSaveStatus("saved");
 
