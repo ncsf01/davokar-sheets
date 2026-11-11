@@ -1,0 +1,35 @@
+<section id="showcase" class="mt-5">
+  <h2 class="mb-1">Characters already on Davokar Sheets</h2>
+  <p class="text-secondary">Every adventurer created on the site so far.</p>
+
+  {% if showcase %}
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Race</th>
+            <th>Occupation</th>
+            <th>Player</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in showcase %}
+          <tr>
+            <td class="font-display fs-5">{{ c.name }}</td>
+            <td>{{ c.race }}</td>
+            <td>{{ c.occupation or "—" }}</td>
+            <td>{{ c.player }}</td>
+            <td class="text-secondary">{{ c.created_at.strftime("%d/%m/%Y") }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-secondary fst-italic">No characters yet. Be the first to create one!</p>
+  {% endif %}
+</section>

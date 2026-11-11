@@ -25,7 +25,9 @@
         {% if g.user %}
         <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('characters.index') }}">Characters</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('characters.index') }}">My characters</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('characters.new') }}">New character</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index', _anchor='showcase') }}">All characters</a></li>
         </ul>
         <div class="d-flex align-items-center gap-2">
           <span class="text-secondary small">{{ g.user.username }}</span>
@@ -35,7 +37,10 @@
           </form>
         </div>
         {% else %}
-        <div class="ms-auto d-flex gap-2">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index', _anchor='showcase') }}">All characters</a></li>
+        </ul>
+        <div class="d-flex gap-2">
           <a class="btn btn-outline-secondary" href="{{ url_for('auth.login') }}">Log in</a>
           <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Sign up</a>
         </div>
@@ -59,7 +64,8 @@
 
   <footer class="border-top py-3 text-center small text-secondary">
     <p class="mb-1">Davokar Sheets is an unofficial fan project. Symbaroum is a trademark of Free League Publishing.</p>
-    <p class="mb-0"><a href="https://github.com/ncsf01/davokar-sheets">Source code</a> · AGPL-3.0</p>
+    <p class="mb-1"><a href="https://github.com/ncsf01/davokar-sheets">Source code</a> · AGPL-3.0</p>
+    <p class="mb-0">Nícolas César Silva Ferreira · Atividade 4</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

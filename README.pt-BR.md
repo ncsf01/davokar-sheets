@@ -82,6 +82,8 @@ davokar-sheets/
 │           ├── rules.js     regras de Symbaroum como funções puras (Defesa, Corrupção...)
 │           └── sheet.js     preenche os valores calculados, cuida dos botões, salva sozinho
 ├── demo/                    versão offline (sem servidor)
+├── Dockerfile               imagem do app (Gunicorn)
+├── nginx/default.conf       configuração do balanceador Nginx
 ├── docker-compose.yml       banco de desenvolvimento (MariaDB no Docker)
 ├── wsgi.py                  ponto de entrada em produção (Gunicorn)
 ├── requirements.txt         dependências Python
@@ -139,7 +141,7 @@ Para parar o banco: `docker compose down` (os dados continuam guardados num volu
 - [ ] Mesas: criar, código de convite, membros, compêndio compartilhado
 - [ ] Rolagens de dados compartilhadas
 - [ ] Botão de idioma inglês / português
-- [ ] Imagem Docker do app, balanceamento com Nginx
+- [x] Imagem Docker do app, balanceamento com Nginx
 - [ ] Deploy na AWS EC2 com replicação do MariaDB
 
 ---

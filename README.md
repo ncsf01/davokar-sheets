@@ -82,6 +82,8 @@ davokar-sheets/
 │           ├── rules.js     Symbaroum rules as pure functions (Defense, Corruption...)
 │           └── sheet.js     fills calculated values, handles buttons, autosaves
 ├── demo/                    offline version (no server)
+├── Dockerfile               image of the app (Gunicorn)
+├── nginx/default.conf       Nginx load balancer config
 ├── docker-compose.yml       development database (MariaDB in Docker)
 ├── wsgi.py                  production entry point (Gunicorn)
 ├── requirements.txt         Python dependencies
@@ -139,7 +141,7 @@ To stop the database: `docker compose down` (the data is kept in a Docker volume
 - [ ] Tables: create, invite code, members, shared compendium
 - [ ] Shared dice rolls
 - [ ] English / Portuguese language switch
-- [ ] Docker image for the app, Nginx load balancing
+- [x] Docker image for the app, Nginx load balancing
 - [ ] Deployment on AWS EC2 with MariaDB replication
 
 ---
