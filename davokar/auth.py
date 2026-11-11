@@ -1,16 +1,3 @@
-"""Accounts: sign up, log in, log out.
-
-How a login works:
-1. On sign up, the password goes through generate_password_hash() and only
-   that hash is stored. The hash cannot be turned back into the password.
-2. On log in, check_password_hash() hashes the typed password the same way
-   and compares the results.
-3. If they match, the user id is saved in `session`. Flask keeps the session
-   in a cookie signed with SECRET_KEY: the browser can store it but cannot
-   change it without the signature breaking.
-4. Before every request, load_logged_in_user() reads that id and puts the
-   user row in `g.user`, so routes and templates know who is logged in.
-"""
 import functools
 import re
 
@@ -30,7 +17,7 @@ MIN_PASSWORD = 8
 
 @bp.before_app_request
 def load_logged_in_user():
-    """Runs before every request of the whole app (not only /auth routes)."""
+    # runs before every request of the app
     user_id = session.get("user_id")
     g.user = None
     if user_id is not None:
@@ -40,13 +27,6 @@ def load_logged_in_user():
 
 
 def login_required(view):
-    """Decorator for routes that need a logged-in user.
-
-    Usage:
-        @bp.route("/characters")
-        @login_required
-        def characters(): ...
-    """
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:
@@ -57,7 +37,7 @@ def login_required(view):
 
 
 def _safe_next(target):
-    """Only follow relative paths after login, never other websites (open redirect)."""
+    # only paths of this site, never another website
     if target and target.startswith("/") and not target.startswith("//"):
         return target
     return url_for("main.index")
@@ -89,7 +69,6 @@ def register():
                     (form["username"], form["email"], generate_password_hash(password)),
                 )
             except pymysql.err.IntegrityError:
-                # The UNIQUE columns in schema.sql reject duplicates.
                 error = "That username or email is already registered."
             else:
                 flash("Account created. You can log in now.", "success")
@@ -110,12 +89,11 @@ def login():
             (login_value, login_value.lower()),
             one=True,
         )
-        # Same message for "user not found" and "wrong password", so the form
-        # does not reveal which accounts exist.
+        # same message for both cases, so nobody learns which accounts exist
         if user is None or not check_password_hash(user["password_hash"], password):
             flash("Incorrect username or password.", "error")
         else:
-            session.clear()  # drop any old session data before logging in
+            session.clear()
             session["user_id"] = user["id"]
             return redirect(_safe_next(request.args.get("next")))
     return render_template("auth/login.html", login_value=login_value)
@@ -123,8 +101,7 @@ def login():
 
 @bp.route("/logout", methods=["POST"])
 def logout():
-    # POST (with CSRF token) instead of a plain link: a link could be
-    # triggered by another site and log the user out without asking.
+    # post, not a link, so other sites can't log people out
     session.clear()
     flash("You have been logged out.", "info")
     return redirect(url_for("main.index"))

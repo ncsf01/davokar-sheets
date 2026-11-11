@@ -1,92 +1,68 @@
-{#
-  base.html: the layout shared by every page.
-
-  Other templates start with {% extends "base.html" %} and only fill the
-  blocks below. The navbar and footer are written once, here.
-
-  Blocks:
-    title    -> text shown in the browser tab
-    content  -> the page itself, inside <main>
-    scripts  -> optional <script> tags, loaded at the end of <body>
-
-  `g.user` is set by auth.load_logged_in_user() before every request:
-  it holds the logged-in user's row, or None for visitors.
-#}
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}{% endblock %} · Davokar Sheets</title>
 
-  {# Fonts from Google Fonts. Each font in style.css has local fallbacks
-     in case these do not load. #}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700;800&family=Alegreya+Sans+SC:wght@500;700&display=swap">
-
-  {# url_for('static', ...) builds the correct path to files in davokar/static/. #}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700;800&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
-  {# ---------- Navbar ---------- #}
-  <header class="navbar">
-    <div class="navbar-inner">
-      <a class="brand" href="{{ url_for('main.index') }}">Davokar Sheets</a>
+  <nav class="navbar navbar-expand-md border-bottom sticky-top">
+    <div class="container-xxl">
+      <a class="navbar-brand" href="{{ url_for('main.index') }}">Davokar Sheets</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-label="Menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-      <nav class="nav-links" aria-label="Main">
+      <div class="collapse navbar-collapse" id="main-nav">
         {% if g.user %}
-          <a href="{{ url_for('main.index') }}">Dashboard</a>
-          <a href="{{ url_for('characters.index') }}">Characters</a>
-          {# Tables link arrives in step 3. #}
-        {% endif %}
-      </nav>
-
-      <div class="nav-user">
-        {% if g.user %}
-          <span class="nav-username">{{ g.user.username }}</span>
-          {# Logout is a form (POST + CSRF token), not a link. See auth.logout(). #}
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('characters.index') }}">Characters</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-secondary small">{{ g.user.username }}</span>
           <form action="{{ url_for('auth.logout') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-ghost" type="submit">Log out</button>
+            <button class="btn btn-link nav-link" type="submit">Log out</button>
           </form>
+        </div>
         {% else %}
-          <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Log in</a>
-          <a class="btn btn-gold" href="{{ url_for('auth.register') }}">Sign up</a>
+        <div class="ms-auto d-flex gap-2">
+          <a class="btn btn-outline-secondary" href="{{ url_for('auth.login') }}">Log in</a>
+          <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Sign up</a>
+        </div>
         {% endif %}
       </div>
     </div>
-  </header>
+  </nav>
 
-  <main class="page">
-    {# ---------- Flash messages ----------
-       Messages created in Python with flash("text", "category") are shown
-       once, on the next page rendered, then discarded. #}
+  <main class="container-xxl py-4 flex-grow-1">
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flashes">
-          {% for category, message in messages %}
-            <p class="flash flash-{{ category }}" role="status">{{ message }}</p>
-          {% endfor %}
-        </div>
-      {% endif %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ {'error': 'danger', 'success': 'success'}.get(category, 'info') }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
     {% endwith %}
 
     {% block content %}{% endblock %}
   </main>
 
-  {# ---------- Footer ---------- #}
-  <footer class="footer">
-    <p>
-      Davokar Sheets is an unofficial fan project.
-      Symbaroum is a trademark of Free League Publishing.
-    </p>
-    <p>
-      <a href="https://github.com/ncsf01/davokar-sheets">Source code</a> · AGPL-3.0
-    </p>
+  <footer class="border-top py-3 text-center small text-secondary">
+    <p class="mb-1">Davokar Sheets is an unofficial fan project. Symbaroum is a trademark of Free League Publishing.</p>
+    <p class="mb-0"><a href="https://github.com/ncsf01/davokar-sheets">Source code</a> · AGPL-3.0</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

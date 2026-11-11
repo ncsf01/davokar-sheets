@@ -1,18 +1,11 @@
-{# characters/_list.html: a reusable piece, not a full page.
-   The leading underscore is a common convention for "partial" templates.
-   It is inserted with {% include "characters/_list.html" %} and uses the
-   `characters` variable of the template that includes it. #}
-<ul class="char-list">
+<div class="list-group list-group-flush">
   {% for c in characters %}
-    <li>
-      <a class="char-row" href="{{ url_for('characters.view', character_id=c.id) }}">
-        {# First letter of the name, shown inside a round medallion. #}
-        <span class="medal" aria-hidden="true">{{ c.name[:1] | upper }}</span>
-        <span class="char-text">
-          <strong>{{ c.name }}</strong>
-          <small>{{ [c.race, c.occupation] | select | join(" · ") or "No race or occupation" }}</small>
-        </span>
-      </a>
-    </li>
+  <a class="list-group-item list-group-item-action d-flex align-items-center gap-3" href="{{ url_for('characters.view', character_id=c.id) }}">
+    <span class="medal">{{ c.name[:1] | upper }}</span>
+    <span>
+      <span class="d-block fs-5 font-display">{{ c.name }}</span>
+      <small class="text-secondary">{{ [c.race, c.occupation] | select | join(" · ") }}</small>
+    </span>
+  </a>
   {% endfor %}
-</ul>
+</div>

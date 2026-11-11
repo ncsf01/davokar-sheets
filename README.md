@@ -72,9 +72,15 @@ davokar-sheets/
 │   ├── schema.sql           CREATE TABLE statements
 │   ├── security.py          CSRF protection for forms
 │   ├── auth.py              blueprint: sign up, log in, log out
+│   ├── characters.py        blueprint: character list, creation, sheet, autosave
+│   ├── catalog.py           names of abilities and equipment tables (no rules text)
 │   ├── main.py              blueprint: home page and dashboard
-│   ├── templates/           Jinja templates (base.html holds navbar and footer)
-│   └── static/css/          stylesheet
+│   ├── templates/           Jinja + Bootstrap 5 templates (base.html holds navbar and footer)
+│   └── static/
+│       ├── css/style.css    colors and fonts on top of Bootstrap's dark theme
+│       └── js/
+│           ├── rules.js     Symbaroum rules as pure functions (Defense, Corruption...)
+│           └── sheet.js     fills calculated values, handles buttons, autosaves
 ├── demo/                    offline version (no server)
 ├── docker-compose.yml       development database (MariaDB in Docker)
 ├── wsgi.py                  production entry point (Gunicorn)
@@ -129,7 +135,7 @@ To stop the database: `docker compose down` (the data is kept in a Docker volume
 
 - [x] Offline demo with compendium import and character export
 - [x] Accounts: sign up, log in, log out
-- [ ] Characters saved in the database
+- [x] Characters saved in the database, interactive sheet with autosave
 - [ ] Tables: create, invite code, members, shared compendium
 - [ ] Shared dice rolls
 - [ ] English / Portuguese language switch

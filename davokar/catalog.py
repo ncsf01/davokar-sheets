@@ -1,0 +1,226 @@
+"""game data: names and equipment tables (no rules text)."""
+
+THALER = 100   # prices are in ortegs
+SHILLING = 10
+
+# (name, category, tag, tiered)
+ENTRIES = [
+    ('Acrobatics', 'General', 'General', True),
+    ('Alchemy', 'General', 'General', True),
+    ('Backstab', 'Combat', 'Combat', True),
+    ('Beast Lore', 'General', 'General', True),
+    ('Berserker', 'Combat', 'Combat', True),
+    ('Bodyguard', 'Combat', 'Combat', True),
+    ('Dominate', 'Combat', 'Combat', True),
+    ('Equestrian', 'Combat', 'Combat', True),
+    ('Exceptional Attribute', 'General', 'General', True),
+    ('Feint', 'Combat', 'Combat', True),
+    ('Iron Fist', 'Combat', 'Combat', True),
+    ('Leader', 'General', 'General', True),
+    ('Loremaster', 'General', 'General', True),
+    ('Man-at-arms', 'Combat', 'Combat', True),
+    ('Marksman', 'Combat', 'Combat', True),
+    ('Medicus', 'General', 'General', True),
+    ('Mystical Power', 'General', 'General', True),
+    ('Natural Warrior', 'Combat', 'Combat', True),
+    ('Poisoner', 'General', 'General', True),
+    ('Polearm Mastery', 'Combat', 'Combat', True),
+    ('Quick Draw', 'Combat', 'Combat', True),
+    ('Recovery', 'General', 'General', True),
+    ('Ritualist', 'General', 'General', True),
+    ('Shield Fighter', 'Combat', 'Combat', True),
+    ('Sixth Sense', 'Combat', 'Combat', True),
+    ('Sorcery', 'General', 'General', True),
+    ('Steadfast', 'General', 'General', True),
+    ('Steel Throw', 'Combat', 'Combat', True),
+    ('Strangler', 'Combat', 'Combat', True),
+    ('Tactician', 'General', 'General', True),
+    ('Theurgy', 'General', 'General', True),
+    ('Twin Attack', 'Combat', 'Combat', True),
+    ('Two-handed Force', 'Combat', 'Combat', True),
+    ('Witchcraft', 'General', 'General', True),
+    ('Witchsight', 'General', 'General', True),
+    ('Wizardry', 'General', 'General', True),
+    ('Anathema', 'Mystical', 'Wizardry/Theurgy', True),
+    ('Bend Will', 'Mystical', 'Wizardry/Sorcery/Witchcraft', True),
+    ('Blessed Shield', 'Mystical', 'Theurgy', True),
+    ('Brimstone Cascade', 'Mystical', 'Wizardry', True),
+    ('Confusion', 'Mystical', 'Wizardry', True),
+    ('Curse', 'Mystical', 'Sorcery/Witchcraft', True),
+    ('Entangling Vines', 'Mystical', 'Witchcraft', True),
+    ('Flame Wall', 'Mystical', 'Wizardry', True),
+    ('Holy Aura', 'Mystical', 'Theurgy', True),
+    ('Illusory Correction', 'Mystical', 'Wizardry', True),
+    ('Inherit Wound', 'Mystical', 'Theurgy/Witchcraft', True),
+    ('Larvae Boil', 'Mystical', 'Sorcery/Witchcraft', True),
+    ('Lay on Hands', 'Mystical', 'Theurgy/Witchcraft', True),
+    ('Levitate', 'Mystical', 'Wizardry/Theurgy', True),
+    ('Maltransformation', 'Mystical', 'Witchcraft', True),
+    ('Mind-Throw', 'Mystical', 'Wizardry', True),
+    ("Nature's Embrace", 'Mystical', 'Witchcraft', True),
+    ("Prios' Burning Glass", 'Mystical', 'Theurgy', True),
+    ('Revenant Strike', 'Mystical', 'Sorcery', True),
+    ('Shapeshift', 'Mystical', 'Witchcraft', True),
+    ('Storm Arrow', 'Mystical', 'Witchcraft', True),
+    ('True Form', 'Mystical', 'Wizardry/Theurgy', True),
+    ('Unholy Aura', 'Mystical', 'Sorcery', True),
+    ('Unnoticeable', 'Mystical', 'Wizardry/Theurgy', True),
+    ('Witch Hammer', 'Mystical', 'Theurgy', True),
+    ('Blood Bond', 'Ritual', 'Witchcraft', False),
+    ('Borrow Beast', 'Ritual', 'Witchcraft', False),
+    ('Break Link', 'Ritual', 'Wizardry', False),
+    ('Clairvoyance', 'Ritual', 'Wizardry', False),
+    ('Command Confession', 'Ritual', 'Theurgy', False),
+    ('Desecrating Rite', 'Ritual', 'Sorcery', False),
+    ('Enslave', 'Ritual', 'Sorcery', False),
+    ('Exchange Shadow', 'Ritual', 'Sorcery', False),
+    ('Exorcism', 'Ritual', 'Theurgy', False),
+    ('False Terrain', 'Ritual', 'Wizardry', False),
+    ('Familiar', 'Ritual', 'Witchcraft', False),
+    ('Flaming Servant', 'Ritual', 'Wizardry', False),
+    ('Fortune-telling', 'Ritual', 'Witchcraft', False),
+    ("Heretic's Trail", 'Ritual', 'Theurgy', False),
+    ('Holy Smoke', 'Ritual', 'Theurgy', False),
+    ('Illusion', 'Ritual', 'Wizardry', False),
+    ('Judging Bonds', 'Ritual', 'Theurgy', False),
+    ('Magic Circle', 'Ritual', 'Wizardry', False),
+    ("Nature's Lullaby", 'Ritual', 'Witchcraft', False),
+    ('Necromancy', 'Ritual', 'Witchcraft', False),
+    ('Oracle', 'Ritual', 'Theurgy', False),
+    ('Patron Saint', 'Ritual', 'Theurgy', False),
+    ('Possess', 'Ritual', 'Sorcery', False),
+    ('Purging Fire', 'Ritual', 'Theurgy', False),
+    ('Quick Growth', 'Ritual', 'Witchcraft', False),
+    ('Sanctifying Rite', 'Ritual', 'Theurgy', False),
+    ('Sanctum', 'Ritual', 'Wizardry', False),
+    ('Seven-league Stride', 'Ritual', 'Wizardry', False),
+    ('Soul Stone', 'Ritual', 'Wizardry', False),
+    ('Summoning', 'Ritual', 'Witchcraft', False),
+    ('Tale of Ashes', 'Ritual', 'Wizardry', False),
+    ('Telepathic Interrogation', 'Ritual', 'Wizardry', False),
+    ('Turn Weather', 'Ritual', 'Witchcraft', False),
+    ('Witch Circle', 'Ritual', 'Witchcraft', False),
+    ('Contacts', 'Trait', 'Trait', False),
+    ('Bushcraft', 'Trait', 'Trait', False),
+    ('Long-Lived', 'Trait', 'Trait', False),
+    ('Pariah', 'Trait', 'Trait', False),
+    ('Privileged', 'Trait', 'Trait', False),
+    ('Robust', 'Trait', 'Trait', True),
+    ('Shapeshifter', 'Trait', 'Trait', True),
+    ('Short-Lived', 'Trait', 'Trait', False),
+    ('Survival Instinct', 'Trait', 'Trait', True)
+]
+
+# (name, kind, damage, qualities, cost)
+WEAPONS = [
+    ("Heavy Weapon", "heavy", "1D10", [], 10 * THALER),
+    ("Bastard Sword", "heavy", "1D10", ["Precise"], 50 * THALER),
+    ("Double-axe", "heavy", "1D10", ["Deep Impact"], 50 * THALER),
+    ("Heavy Flail", "heavy", "1D10", ["Jointed"], 50 * THALER),
+    ("Long Weapon", "long", "1D8", ["Long"], 3 * THALER),
+    ("Halberd", "long", "1D8", ["Long", "Deep Impact"], 15 * THALER),
+    ("Pike", "long", "1D8", ["Long", "Precise"], 15 * THALER),
+    ("Quarterstaff", "long", "1D6", ["Long", "Blunt"], 1 * SHILLING),
+    ("Crossbow", "crossbow", "1D10", [], 8 * THALER),
+    ("Arbalest", "crossbow", "1D10", ["Deep Impact"], 40 * THALER),
+    ("Bow", "bow", "1D8", [], 5 * THALER),
+    ("Longbow", "bow", "1D8", ["Precise"], 25 * THALER),
+    ("Single-Handed Weapon", "single", "1D8", [], 5 * THALER),
+    ("Crow's Beak", "single", "1D8", ["Deep Impact"], 25 * THALER),
+    ("Fencing Sword", "single", "1D8", ["Precise"], 25 * THALER),
+    ("Flail", "single", "1D8", ["Jointed"], 25 * THALER),
+    ("Shield", "shield", "1D4", [], 3 * THALER),
+    ("Buckler", "shield", "1D4", ["Flexible"], 15 * THALER),
+    ("Steel Shield", "shield", "1D4", ["Balanced"], 15 * THALER),
+    ("Dagger", "short", "1D6", ["Short"], 1 * THALER),
+    ("Parrying Dagger", "short", "1D6", ["Short", "Balanced"], 5 * THALER),
+    ("Stiletto", "short", "1D6", ["Short", "Deep Impact"], 5 * THALER),
+    ("Throwing Weapon", "throwing", "1D6", [], 2 * THALER),
+    ("Spear Sling", "throwing", "1D6", ["Deep Impact"], 10 * THALER),
+    ("Unarmed Attack", "unarmed", "1D4", ["Short"], 0),
+    ("Battle Claw", "unarmed", "1D4", ["Short", "Deep Impact"], 1 * THALER),
+]
+
+# (name, weight, qualities, cost)
+ARMORS = [
+    ("Light Armor", "light", [], 2 * THALER),
+    ("Blessed Robe", "light", ["Flexible"], 10 * THALER),
+    ("Order Cloak", "light", ["Flexible"], 10 * THALER),
+    ("Witch Gown", "light", ["Flexible"], 10 * THALER),
+    ("Wolf Skin", "light", ["Cumbersome"], 1 * THALER),
+    ("Woven Silk", "light", ["Flexible"], 10 * THALER),
+    ("Medium Armor", "medium", [], 5 * THALER),
+    ("Crow Armor", "medium", ["Cumbersome"], 2 * THALER),
+    ("Lacquered Silk Cuirass", "medium", ["Flexible"], 25 * THALER),
+    ("Heavy Armor", "heavy", [], 10 * THALER),
+    ("Full Plate", "heavy", ["Flexible"], 50 * THALER),
+]
+
+# (name, group, cost)
+ITEMS = [
+    ("Antidote (Weak)", "Elixirs", 1 * THALER), ("Antidote (Moderate)", "Elixirs", 2 * THALER),
+    ("Antidote (Strong)", "Elixirs", 3 * THALER), ("Choking Spores", "Elixirs", 2 * THALER),
+    ("Concentrated Magic", "Elixirs", 1 * THALER), ("Eye Drops", "Elixirs", 2 * THALER),
+    ("Elemental Essence", "Elixirs", 2 * THALER), ("Elixir of Life", "Elixirs", 6 * THALER),
+    ("Ghost Candle", "Elixirs", 2 * THALER), ("Herbal Cure", "Elixirs", 1 * THALER),
+    ("Poison (Weak)", "Elixirs", 2 * THALER), ("Poison (Moderate)", "Elixirs", 4 * THALER),
+    ("Poison (Strong)", "Elixirs", 6 * THALER), ("Protective Oil", "Elixirs", 2 * THALER),
+    ("Spore Bomb", "Elixirs", 3 * THALER), ("Waybread", "Elixirs", 1 * THALER),
+    ("Wraith Dust", "Elixirs", 2 * THALER),
+    ("10 arrows or bolts", "Ammunition", 1 * THALER),
+    ("Bandages", "Gear", 5), ("Bear trap", "Gear", 5 * SHILLING), ("Blanket", "Gear", 2),
+    ("Camping gear", "Gear", 5 * SHILLING), ("Climbing equipment", "Gear", 1 * THALER),
+    ("Fishing line and hook", "Gear", 3), ("Grappling hook", "Gear", 1 * THALER),
+    ("Hour glass", "Gear", 4 * THALER), ("Ink and feather", "Gear", 1 * SHILLING),
+    ("Lantern", "Gear", 4), ("Lamp oil", "Gear", 1), ("Lockpicks", "Gear", 1 * THALER),
+    ("Parchment", "Gear", 2), ("Pocket mirror", "Gear", 7 * THALER), ("Rope", "Gear", 1 * SHILLING),
+    ("Rope ladder", "Gear", 3 * SHILLING), ("Snares", "Gear", 3 * SHILLING), ("Spy glass", "Gear", 10 * THALER),
+    ("Tent", "Gear", 3 * SHILLING), ("Torch", "Gear", 1), ("Wax candle", "Gear", 4),
+    ("Weapon maintenance kit", "Gear", 5 * SHILLING), ("Whetstone", "Gear", 4), ("Whistle", "Gear", 2 * SHILLING),
+    ("Backpack", "Containers", 1 * THALER), ("Belt pouch", "Containers", 5), ("Glass vial", "Containers", 1 * SHILLING),
+    ("Knapsack", "Containers", 1 * SHILLING), ("Quiver", "Containers", 1 * SHILLING), ("Sack", "Containers", 2),
+    ("Simple garb", "Clothing", 1 * SHILLING), ("Artisan's garb", "Clothing", 5 * SHILLING),
+    ("Burgher's garb", "Clothing", 1 * THALER), ("Noble's garb", "Clothing", 10 * THALER),
+    ("Boots", "Clothing", 1 * SHILLING), ("Cloak", "Clothing", 2),
+    ("Mule", "Transport", 3 * THALER), ("Riding horse, light", "Transport", 5 * THALER),
+    ("Riding horse, heavy", "Transport", 7 * THALER), ("Cart", "Transport", 1 * THALER),
+]
+
+QUALITIES = {
+    "Precise": "+1 to attack tests.",
+    "Deep Impact": "+1 damage.",
+    "Jointed": "even a successful parry is hit on an odd roll (1D6 damage).",
+    "Long": "one free attack per turn against enemies entering melee range.",
+    "Blunt": "damage die one step lower.",
+    "Short": "drawn as a free action, works with Feint.",
+    "Balanced": "+1 Defense.",
+    "Flexible": "lowers the armor's Impeding penalty.",
+    "Cumbersome": "Impeding one point worse.",
+}
+
+KIND_LABELS = {
+    "heavy": "Heavy weapon", "long": "Long weapon", "single": "Single-handed weapon",
+    "short": "Short weapon", "unarmed": "Unarmed", "shield": "Shield", "bow": "Bow",
+    "crossbow": "Crossbow", "sling": "Sling", "throwing": "Throwing weapon",
+}
+
+# ability groups shown on the sheet: group -> categories
+GROUPS = {
+    "abilities": ("Abilities", ["General", "Combat"]),
+    "powers": ("Mystical powers", ["Mystical"]),
+    "rituals": ("Rituals", ["Ritual"]),
+    "traits": ("Traits", ["Trait"]),
+}
+
+
+def money_text(ortegs):
+    t, rest = divmod(ortegs, 100)
+    s, o = divmod(rest, 10)
+    parts = []
+    if t:
+        parts.append(f"{t} thaler")
+    if s:
+        parts.append(f"{s} shilling" + ("s" if s > 1 else ""))
+    if o or not parts:
+        parts.append(f"{o} orteg" + ("s" if o != 1 else ""))
+    return ", ".join(parts)

@@ -1,68 +1,59 @@
-{# characters/new.html: form to create a character. Handled by characters.new().
-
-   `options` comes from race_options() in characters.py: one entry per valid
-   race choice. Humans appear twice per culture, once for each free trait
-   they can pick (e.g. Ambrian with Contacts, Ambrian with Privileged).
-   <optgroup> groups those entries under a heading inside the dropdown.
-
-   `races` is the RACES dict, used here to list each race's traits. #}
 {% extends "base.html" %}
 
 {% block title %}New character{% endblock %}
 
 {% block content %}
-<section class="auth-box card">
-  <h1>New character</h1>
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-5">
+    <div class="card">
+      <div class="card-body p-4">
+        <h1 class="h2 mb-4">New character</h1>
 
-  <form method="post" class="form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <label class="field">
-      <span>Name</span>
-      <input type="text" name="name" value="{{ form.name }}" maxlength="100" required autofocus>
-    </label>
+          <div class="mb-3">
+            <label class="form-label" for="name">Name</label>
+            <input class="form-control" id="name" name="name" value="{{ form.name }}" maxlength="100" required autofocus>
+          </div>
 
-    <label class="field">
-      <span>Race</span>
-      <select name="race">
-        <optgroup label="Human">
-          {% for o in options if races[o.race].human %}
-            <option value="{{ o.value }}" {% if form.race == o.value %}selected{% endif %}>
-              {{ o.race }}, with {{ o.trait }}
-            </option>
-          {% endfor %}
-        </optgroup>
-        {% for o in options if not races[o.race].human %}
-          <option value="{{ o.value }}" {% if form.race == o.value %}selected{% endif %}>
-            {{ o.race }} ({{ races[o.race].fixed | join(", ") }})
-          </option>
-        {% endfor %}
-      </select>
-      <small class="hint">
-        Humans pick one free trait. Changelings, goblins and ogres get their listed traits for free.
-      </small>
-    </label>
+          <div class="mb-3">
+            <label class="form-label" for="race">Race</label>
+            <select class="form-select" id="race" name="race">
+              <optgroup label="Human">
+                {% for o in options if races[o.race].human %}
+                <option value="{{ o.value }}" {% if form.race == o.value %}selected{% endif %}>{{ o.race }}, with {{ o.trait }}</option>
+                {% endfor %}
+              </optgroup>
+              {% for o in options if not races[o.race].human %}
+              <option value="{{ o.value }}" {% if form.race == o.value %}selected{% endif %}>{{ o.race }} ({{ races[o.race].fixed | join(", ") }})</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Humans pick one free trait. The other races get their listed traits for free.</div>
+          </div>
 
-    <label class="check">
-      <input type="checkbox" name="optional" {% if form.optional %}checked{% endif %}>
-      <span>
-        Start with the race's optional trait at novice level:
-        Shapeshifter (changeling), Survival Instinct (goblin) or Robust (ogre).
-        <small class="hint">Costs 10 experience, like an ability. Ignored for humans.</small>
-      </span>
-    </label>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="optional" name="optional" {% if form.optional %}checked{% endif %}>
+            <label class="form-check-label" for="optional">
+              Start with the race's optional trait: Shapeshifter (changeling), Survival Instinct (goblin) or Robust (ogre)
+            </label>
+            <div class="form-text">Costs 10 experience. Ignored for humans.</div>
+          </div>
 
-    <label class="field">
-      <span>Occupation</span>
-      <input type="text" name="occupation" value="{{ form.occupation }}" maxlength="100" placeholder="e.g. Treasure hunter">
-    </label>
+          <div class="mb-3">
+            <label class="form-label" for="occupation">Occupation</label>
+            <input class="form-control" id="occupation" name="occupation" value="{{ form.occupation }}" maxlength="100" placeholder="e.g. Treasure hunter">
+          </div>
 
-    <p class="hint">
-      Every attribute starts at 10 (the 80-point total). The character gets 50 experience to spend,
-      plus camping gear, a dagger and a light armor.
-    </p>
+          <p class="form-text mb-4">
+            Every attribute starts at 10 (80 points in total). The character gets 50 experience,
+            camping gear, a dagger and a light armor.
+          </p>
 
-    <button class="btn btn-gold btn-block" type="submit">Create character</button>
-  </form>
-</section>
+          <button class="btn btn-primary w-100" type="submit">Create character</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

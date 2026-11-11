@@ -72,9 +72,15 @@ davokar-sheets/
 │   ├── schema.sql           comandos CREATE TABLE
 │   ├── security.py          proteção CSRF dos formulários
 │   ├── auth.py              blueprint: cadastro, login, logout
+│   ├── characters.py        blueprint: lista de fichas, criação, ficha, salvamento automático
+│   ├── catalog.py           nomes de habilidades e tabelas de equipamento (sem texto de regras)
 │   ├── main.py              blueprint: página inicial e painel
-│   ├── templates/           templates Jinja (base.html tem a navbar e o footer)
-│   └── static/css/          folha de estilo
+│   ├── templates/           templates Jinja + Bootstrap 5 (base.html tem a navbar e o footer)
+│   └── static/
+│       ├── css/style.css    cores e fontes por cima do tema escuro do Bootstrap
+│       └── js/
+│           ├── rules.js     regras de Symbaroum como funções puras (Defesa, Corrupção...)
+│           └── sheet.js     preenche os valores calculados, cuida dos botões, salva sozinho
 ├── demo/                    versão offline (sem servidor)
 ├── docker-compose.yml       banco de desenvolvimento (MariaDB no Docker)
 ├── wsgi.py                  ponto de entrada em produção (Gunicorn)
@@ -129,7 +135,7 @@ Para parar o banco: `docker compose down` (os dados continuam guardados num volu
 
 - [x] Demo offline com importação de compêndio e exportação de ficha
 - [x] Contas: cadastro, login, logout
-- [ ] Fichas salvas no banco de dados
+- [x] Fichas salvas no banco de dados, ficha interativa com salvamento automático
 - [ ] Mesas: criar, código de convite, membros, compêndio compartilhado
 - [ ] Rolagens de dados compartilhadas
 - [ ] Botão de idioma inglês / português

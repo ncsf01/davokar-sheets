@@ -1,297 +1,239 @@
-/* ==========================================================================
-   Davokar Sheets: main stylesheet
-   Sections:
-     1. Design tokens (CSS variables)
-     2. Base elements
-     3. Layout: navbar, page, footer
-     4. Components: buttons, cards, forms, flash messages
-     5. Pages: landing, dashboard, auth
-     6. Characters: list, medallion, attribute list
-   ========================================================================== */
+:root,
+[data-bs-theme="dark"] {
+  --moss-black: #10120d;
+  --panel: #1a1d15;
+  --panel-2: #22261c;
+  --line: #343b2b;
+  --parchment: #ebe2cb;
+  --muted: #aaa28a;
+  --gold: #cda54f;
+  --gold-light: #e6c574;
+  --gold-ink: #1b1507;
+  --blood: #cf5a46;
+  --rot: #a57cc0;
+  --moss: #8fb064;
 
-
-/* 1. Design tokens -------------------------------------------------------
-   Every color, font and radius is defined once here as a CSS custom
-   property ("variable") and reused with var(--name). Changing the look of
-   the whole site means changing these values only.
-   The palette is a dark forest theme: moss-black backgrounds, parchment
-   text, brass accents, red for Toughness and violet for Corruption. */
-:root {
-  color-scheme: dark;              /* native inputs and scrollbars use dark styles */
-
-  --bg:      #10120d;              /* page background */
-  --bg2:     #151810;              /* inputs */
-  --panel:   #1a1d15;              /* cards */
-  --panel2:  #22261c;              /* raised cards, hover */
-  --line:    #343b2b;              /* borders */
-  --line2:   #454d39;              /* stronger borders */
-
-  --ink:     #ebe2cb;              /* main text */
-  --muted:   #aaa28a;              /* secondary text */
-  --faint:   #77725f;              /* hints, captions */
-
-  --brass:   #cda54f;              /* accent: primary buttons, links */
-  --brass2:  #e6c574;              /* accent, lighter (hover) */
-  --brass-ink: #1b1507;            /* text placed on top of brass */
-
-  --blood:   #cf5a46;              /* errors, damage */
-  --rot:     #a57cc0;              /* corruption */
-  --moss:    #8fb064;              /* success */
-
-  /* Font stacks: the first font comes from Google Fonts, the rest are
-     fallbacks already installed on most systems. */
-  --font-display: "IM Fell English SC", "Palatino Linotype", Palatino, Georgia, serif;
-  --font-body:    "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
-  --font-sc:      "Alegreya Sans SC", "Alegreya Sans", system-ui, sans-serif;
-
-  --radius: 8px;
+  --bs-body-bg: var(--moss-black);
+  --bs-body-color: var(--parchment);
+  --bs-secondary-color: var(--muted);
+  --bs-tertiary-bg: var(--panel);
+  --bs-secondary-bg: var(--panel-2);
+  --bs-border-color: var(--line);
+  --bs-link-color: var(--gold-light);
+  --bs-link-hover-color: var(--parchment);
+  --bs-link-color-rgb: 230, 197, 116;
+  --bs-link-hover-color-rgb: 235, 226, 203;
+  --bs-body-font-family: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --bs-body-font-size: 1.05rem;
 }
 
-
-/* 2. Base elements ------------------------------------------------------- */
-* { box-sizing: border-box; }      /* width/height include padding and border */
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  display: flex;                   /* column layout keeps the footer at the bottom */
-  flex-direction: column;
-  background: var(--bg);
-  color: var(--ink);
-  font: 16px/1.5 var(--font-body);
-}
-
-a { color: var(--brass2); }
-a:hover { color: var(--ink); }
-
-h1, h2, h3 {
-  font-family: var(--font-display);
+h1, h2, h3, h4, h5,
+.navbar-brand,
+.font-display {
+  font-family: "IM Fell English SC", "Palatino Linotype", Georgia, serif;
   font-weight: 400;
-  line-height: 1.15;
-  margin: 0;
-  text-wrap: balance;              /* splits long headings into even lines */
 }
 
-/* Visible outline only for keyboard navigation (not on mouse clicks). */
-:focus-visible { outline: 2px solid var(--brass2); outline-offset: 2px; }
+.text-gold { color: var(--gold-light); }
 
-
-/* 3. Layout ---------------------------------------------------------------- */
-
-/* Navbar: sticks to the top while the page scrolls. */
 .navbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   background: rgba(16, 18, 13, 0.92);
-  backdrop-filter: blur(8px);      /* blurs the content scrolling underneath */
-  border-bottom: 1px solid var(--line);
-}
-.navbar-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;                 /* items move to a new line on small screens */
-}
-.brand {
-  font-family: var(--font-display);
-  font-size: 22px;
-  color: var(--brass2);
-  text-decoration: none;
-}
-.nav-links { display: flex; gap: 12px; flex: 1; }  /* flex: 1 pushes .nav-user to the right */
-.nav-links a { color: var(--muted); text-decoration: none; }
-.nav-links a:hover { color: var(--ink); }
-.nav-user { display: flex; align-items: center; gap: 8px; }
-.nav-user form { margin: 0; }
-.nav-username { color: var(--muted); font-size: 14px; }
-
-/* Main content area: centered column with side padding (gutter). */
-.page {
-  flex: 1;                         /* grows to fill the space above the footer */
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 16px 48px;
+  backdrop-filter: blur(8px);
 }
 
-.footer {
-  border-top: 1px solid var(--line);
-  padding: 16px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--faint);
-}
-.footer p { margin: 4px 0; }
+.navbar-brand { color: var(--gold-light); font-size: 1.4rem; }
 
+.card { --bs-card-bg: var(--panel); --bs-card-cap-bg: var(--panel-2); }
 
-/* 4. Components -------------------------------------------------------------- */
+.list-group { --bs-list-group-bg: var(--panel); }
 
-/* Buttons: .btn is the base; modifiers change color or size.
-   Works on both <a> and <button> elements. */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border: 1px solid var(--line2);
-  border-radius: 6px;
-  background: var(--panel2);
-  color: var(--ink);
-  font: 500 14px var(--font-body);
-  text-decoration: none;
-  cursor: pointer;
-}
-.btn:hover { border-color: var(--brass); color: var(--brass2); }
-.btn-gold { background: var(--brass); border-color: var(--brass); color: var(--brass-ink); font-weight: 700; }
-.btn-gold:hover { background: var(--brass2); color: var(--brass-ink); }
-.btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
-.btn-lg { padding: 10px 20px; font-size: 16px; }
-.btn-block { width: 100%; }
+.modal { --bs-modal-bg: var(--panel); }
 
-/* Cards: bordered panels that group related content. */
-.card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 16px;
-}
-.card h2 { font-size: 22px; margin-bottom: 6px; }
-.card-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 6px;
-  margin-bottom: 10px;
+/* --- buttons --- */
+
+.btn-primary {
+  --bs-btn-bg: var(--gold);
+  --bs-btn-border-color: var(--gold);
+  --bs-btn-color: var(--gold-ink);
+  --bs-btn-hover-bg: var(--gold-light);
+  --bs-btn-hover-border-color: var(--gold-light);
+  --bs-btn-hover-color: var(--gold-ink);
+  --bs-btn-active-bg: var(--gold-light);
+  --bs-btn-active-color: var(--gold-ink);
+  --bs-btn-disabled-bg: var(--gold);
+  --bs-btn-disabled-border-color: var(--gold);
+  --bs-btn-disabled-color: var(--gold-ink);
+  font-weight: 700;
 }
 
-/* Forms: each .field is a <label> wrapping its title, input and hint,
-   so clicking the title focuses the input. */
-.form { display: flex; flex-direction: column; gap: 14px; }
-.field { display: flex; flex-direction: column; gap: 4px; }
-.field > span {
-  font-family: var(--font-sc);
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
+.btn-outline-gold {
+  --bs-btn-color: var(--gold-light);
+  --bs-btn-border-color: #5f5232;
+  --bs-btn-hover-bg: var(--panel-2);
+  --bs-btn-hover-border-color: var(--gold);
+  --bs-btn-hover-color: var(--gold-light);
+  --bs-btn-active-bg: var(--gold);
+  --bs-btn-active-border-color: var(--gold);
+  --bs-btn-active-color: var(--gold-ink);
+}
+
+.btn-rot {
+  --bs-btn-color: #d6bde6;
+  --bs-btn-border-color: #5d4470;
+  --bs-btn-hover-color: #f0e0fa;
+  --bs-btn-hover-border-color: var(--rot);
+  --bs-btn-hover-bg: #2c2236;
+}
+
+.text-bg-rot { background: #3a2748; color: #dcc4ec; }
+.progress-bar.bg-rot { background-color: var(--rot); }
+
+/* --- characters --- */
+
+.medal {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3b4230, #1c2016);
+  color: var(--gold-light);
+  font-family: "IM Fell English SC", Georgia, serif;
+  font-size: 1.2rem;
+}
+
+.medal-lg { width: 64px; height: 64px; font-size: 1.9rem; border-width: 2px; }
+
+.name-input {
+  font-family: "IM Fell English SC", Georgia, serif;
+  font-size: 2.1rem;
+  color: var(--parchment);
+  padding: 0;
+}
+
+/* --- sheet --- */
+
+.stat-label {
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--muted);
 }
-input, select, textarea {
-  font: inherit;
-  color: var(--ink);
-  background: var(--bg2);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 8px 10px;
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
-input:focus, select:focus, textarea:focus { border-color: var(--brass); outline: none; }
-.hint { font-size: 12.5px; color: var(--faint); }
 
-/* Flash messages: one color per category passed to flash() in Python. */
-.flashes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-.flash {
-  margin: 0;
-  padding: 10px 14px;
-  border: 1px solid var(--line2);
-  border-left-width: 4px;
-  border-radius: 6px;
-  background: var(--panel);
+.stat-value small { font-size: 1rem; font-weight: 500; color: var(--muted); }
+.stat-formula { font-size: 1.4rem; }
+
+.stat-button {
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
 }
-.flash-success { border-left-color: var(--moss); }
-.flash-error   { border-left-color: var(--blood); }
-.flash-info    { border-left-color: var(--brass); }
 
-.muted { color: var(--muted); }
-.empty { color: var(--faint); font-style: italic; margin: 0; }
+.stat-button:hover { border-color: var(--gold); }
 
+.stat.is-warning .stat-value { color: var(--gold-light); }
+.stat.is-danger .stat-value,
+.stat-value.is-danger { color: var(--blood); }
+.stat.is-corrupt .stat-value { color: var(--rot); }
+.stat.is-warning .progress-bar { background-color: var(--gold); }
+.stat.is-danger .progress-bar { background-color: var(--blood); }
 
-/* 5. Pages ------------------------------------------------------------------- */
+.progress { height: 6px; }
+.progress-bar { background-color: var(--moss); }
 
-/* Landing page */
-.hero { max-width: 640px; padding: 40px 0 32px; }
-.hero h1 { font-size: clamp(32px, 6vw, 48px); color: var(--brass2); }   /* scales with screen width */
-.lead { font-size: 18px; color: var(--muted); }
-.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-
-/* auto-fit + minmax: as many 240px+ columns as fit; one column on phones. */
-.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.features p { margin: 0; color: var(--muted); }
-
-/* Dashboard */
-.page-title { font-size: 32px; margin-bottom: 20px; }
-.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
-
-/* Log-in and sign-up forms: narrow centered box. */
-.auth-box { max-width: 420px; margin: 24px auto; padding: 24px; }
-.auth-box h1 { font-size: 30px; margin-bottom: 16px; }
-.auth-box .muted { margin: 16px 0 0; text-align: center; }
-
-
-/* 6. Characters -------------------------------------------------------------- */
-
-/* Page header: title on the left, main action on the right. */
-.page-head {
+.attribute-roll {
+  width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-.page-head .page-title { margin-bottom: 4px; }
-.page-head p { margin: 0; }
-
-.btn-sm { padding: 3px 10px; font-size: 13px; }
-.btn-danger { background: var(--blood); border-color: var(--blood); color: #fff; font-weight: 700; }
-.btn-danger:hover { filter: brightness(1.1); color: #fff; }
-
-/* Character list: each row is one big link (medallion + name + details). */
-.char-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.char-row {
-  display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--ink);
-  text-decoration: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
 }
-.char-row:hover { border-color: var(--line2); background: var(--panel2); color: var(--ink); }
-.char-text { display: flex; flex-direction: column; min-width: 0; }
-.char-text strong { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
-.char-text small { color: var(--muted); }
-.card-foot { margin: 10px 0 0; font-size: 14px; }
 
-/* Medallion with the character's initial. */
-.medal {
-  width: 36px;
-  height: 36px;
-  flex: none;                       /* never shrinks when the name is long */
-  border-radius: 50%;
+.attribute-roll:hover { color: var(--gold-light); }
+.attribute-name { font-family: "IM Fell English SC", Georgia, serif; }
+.attribute-value { font-size: 1.7rem; font-weight: 800; color: var(--gold-light); }
+
+@media (max-width: 991px) {
+  .attribute-roll { flex-direction: column; }
+}
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.ability-name {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--parchment);
+  text-align: left;
+  font-family: "IM Fell English SC", Georgia, serif;
+  font-size: 1.15rem;
+}
+
+.ability-name:hover { color: var(--gold-light); }
+
+.tiers li { padding: 0.35rem 0.5rem; border-radius: 4px; color: var(--muted); }
+.tiers li:empty { display: none; }
+.tiers li.have { background: var(--panel-2); color: var(--parchment); }
+
+.item-name { font-family: "IM Fell English SC", Georgia, serif; font-size: 1.1rem; }
+.list-group-item.off { opacity: 0.6; }
+
+.roll-box { display: flex; flex-direction: column; line-height: 1.1; min-width: 80px; }
+.roll-box small { font-size: 0.7rem; text-transform: uppercase; color: var(--muted); }
+
+.just-added { box-shadow: 0 0 0 3px rgba(205, 165, 79, 0.45); }
+
+/* --- rolls --- */
+
+@media (min-width: 992px) {
+  .rolls { position: sticky; top: 80px; }
+}
+
+.roll-list { max-height: 60vh; overflow-y: auto; }
+
+.roll {
   display: grid;
-  place-items: center;              /* centers the letter both ways */
-  border: 1px solid var(--brass);
-  background: radial-gradient(circle at 35% 30%, #3b4230, #1c2016);
-  color: var(--brass2);
-  font-family: var(--font-display);
-  font-size: 18px;
+  grid-template-columns: 1fr auto;
+  column-gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: 6px;
+  background: var(--moss-black);
 }
 
-/* Key/value list (attribute name -> value) in two columns. */
-.kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; margin: 0; }
-.kv dt { color: var(--muted); }
-.kv dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.roll-result { grid-row: span 2; font-size: 1.5rem; }
+.roll-detail { color: var(--muted); }
 
-.plain { margin: 0; padding-left: 18px; }
-
-/* Checkbox with a long label: box on the left, text wrapping on the right. */
-.check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
-.check input { margin-top: 4px; accent-color: var(--brass); }   /* accent-color tints the native checkbox */
-.check span { display: flex; flex-direction: column; gap: 2px; }
+.roll.success { border-left-color: var(--moss); }
+.roll.success .roll-result { color: var(--moss); }
+.roll.failure { border-left-color: var(--blood); }
+.roll.failure .roll-result { color: var(--blood); }
+.roll.damage { border-left-color: var(--gold); }
+.roll.damage .roll-result { color: var(--gold-light); }
+.roll.corruption { border-left-color: var(--rot); }
+.roll.corruption .roll-result { color: var(--rot); }

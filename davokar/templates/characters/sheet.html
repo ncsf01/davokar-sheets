@@ -1,47 +1,627 @@
-{# characters/sheet.html: the character sheet. Rendered by characters.view().
-   Part A of step 2 shows a read-only summary built from the saved JSON.
-   Part B replaces this with the full interactive sheet (rules.js + sheet.js). #}
 {% extends "base.html" %}
+
+{% set d = payload.data %}
+{% set owned = d.abilities | map(attribute="name") | list %}
+{% set xp_cost = [0, 10, 30, 60] %}
+
+{% macro shop_modal(id, title) %}
+<div class="modal fade" id="{{ id }}" tabindex="-1" aria-labelledby="{{ id }}-title">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h4" id="{{ id }}-title">{{ title }}</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input class="form-control mb-2" type="search" placeholder="Search…" data-search>
+        <p class="small text-secondary">In the purse: <span data-out="money"></span></p>
+        <ul class="list-group">
+          {{ caller() }}
+        </ul>
+        <form class="input-group mt-3" data-custom="{{ id }}">
+          <input class="form-control" name="name" placeholder="Custom name" maxlength="100" required>
+          <button class="btn btn-outline-secondary" type="submit">Add custom</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
 
 {% block title %}{{ character.name }}{% endblock %}
 
 {% block content %}
-{% set d = character.data %}
+<div id="sheet">
 
-<div class="page-head">
-  <div>
-    <h1 class="page-title">{{ character.name }}</h1>
-    <p class="muted">{{ [character.race, character.occupation] | select | join(" · ") or "No race or occupation" }}</p>
-  </div>
-  <a class="btn btn-ghost" href="{{ url_for('characters.delete', character_id=character.id) }}">Delete…</a>
-</div>
+  <header class="d-flex flex-wrap align-items-center gap-3 mb-3">
+    <span class="medal medal-lg" data-out="initial">{{ character.name[:1] | upper }}</span>
+    <div class="flex-grow-1">
+      <input class="form-control-plaintext name-input" data-bind="@name" value="{{ payload.name }}" maxlength="100" aria-label="Name">
+      <div class="d-flex align-items-center gap-2 text-secondary">
+        <span>{{ character.race or "No race" }}</span>
+        <span>·</span>
+        <input class="form-control-plaintext form-control-sm text-secondary w-auto" data-bind="@occupation"
+               value="{{ payload.occupation }}" placeholder="Occupation" maxlength="100" aria-label="Occupation">
+      </div>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <span class="badge rounded-pill text-bg-success" id="save-status">Saved</span>
+      <button class="btn btn-outline-secondary" type="button" data-action="end-scene">End scene</button>
+      <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#compendium">Compendium</button>
+      <button class="btn btn-outline-secondary" type="button" data-action="export">Export</button>
+      <a class="btn btn-outline-danger" href="{{ url_for('characters.delete', character_id=character.id) }}">Delete</a>
+    </div>
+  </header>
 
-<div class="grid-2">
-  <section class="card">
-    <div class="card-head"><h2>Attributes</h2></div>
-    {# dictsort sorts the attributes alphabetically: accurate, cunning, ... #}
-    <dl class="kv">
-      {% for key, value in d.attrs | dictsort %}
-        <dt>{{ key | capitalize }}</dt><dd>{{ value }}</dd>
-      {% endfor %}
-    </dl>
+  <section class="row row-cols-2 row-cols-md-3 row-cols-xl-6 g-2 mb-3">
+    <div class="col">
+      <div class="card stat h-100" data-state="toughness">
+        <div class="card-body">
+          <div class="stat-label">Toughness</div>
+          <div class="stat-value"><span data-out="toughness"></span> <small>/ <span data-out="toughnessMax"></span></small></div>
+          <div class="progress my-2" role="progressbar" aria-label="Toughness">
+            <div class="progress-bar" data-out-width="toughness"></div>
+          </div>
+          <div class="input-group input-group-sm">
+            <input class="form-control" type="number" min="0" id="damage-amount" placeholder="0" aria-label="Amount">
+            <button class="btn btn-outline-danger" type="button" data-action="damage">Dmg</button>
+            <button class="btn btn-outline-success" type="button" data-action="heal">Heal</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card stat h-100">
+        <div class="card-body">
+          <div class="stat-label">Pain threshold</div>
+          <div class="stat-value" data-out="painThreshold"></div>
+          <div class="small text-secondary">a hit this strong knocks you down</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <button class="card stat stat-button h-100 w-100" type="button" data-action="roll-defense">
+        <span class="card-body">
+          <span class="stat-label">Defense <small>roll</small></span>
+          <span class="stat-value d-block" data-out="defense"></span>
+          <span class="small text-secondary" data-out="defenseParts"></span>
+        </span>
+      </button>
+    </div>
+
+    <div class="col">
+      <button class="card stat stat-button h-100 w-100" type="button" data-action="roll-armor">
+        <span class="card-body">
+          <span class="stat-label">Armor <small>roll</small></span>
+          <span class="stat-value stat-formula d-block" data-out="armorFormula"></span>
+          <span class="small text-secondary" data-out="armorName"></span>
+        </span>
+      </button>
+    </div>
+
+    <div class="col">
+      <div class="card stat h-100" data-state="corruption">
+        <div class="card-body">
+          <div class="stat-label">Corruption <span class="badge text-bg-dark" data-out="corruptionBadge"></span></div>
+          <div class="stat-value"><span data-out="corruptionTotal"></span> <small>/ <span data-out="corruptionMax"></span></small></div>
+          <div class="progress my-2" role="progressbar" aria-label="Corruption">
+            <div class="progress-bar bg-rot" data-out-width="corruption"></div>
+          </div>
+          <div class="d-flex align-items-center gap-1 small text-secondary">
+            Temp.
+            <button class="btn btn-sm btn-outline-secondary py-0" type="button" data-action="corruption" data-delta="-1">−</button>
+            <b data-out="corruptionTemporary"></b>
+            <button class="btn btn-sm btn-outline-secondary py-0" type="button" data-action="corruption" data-delta="1">+</button>
+            <span class="ms-1">Perm. <b data-out="corruptionPermanent"></b></span>
+          </div>
+          <div class="small text-secondary">threshold <span data-out="corruptionThreshold"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card stat h-100">
+        <div class="card-body">
+          <div class="stat-label">Experience</div>
+          <div class="stat-value" data-state="xp"><span data-out="xpFree"></span> <small>free</small></div>
+          <div class="input-group input-group-sm my-2">
+            <span class="input-group-text">Total</span>
+            <input class="form-control" type="number" min="0" data-bind="xpTotal" data-type="int" value="{{ d.xpTotal }}" aria-label="Total experience">
+          </div>
+          <div class="small text-secondary">spent <b data-out="xpSpent"></b></div>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section class="card">
-    <div class="card-head"><h2>Abilities &amp; traits</h2></div>
-    {% if d.abilities %}
-      <ul class="plain">
-        {% for a in d.abilities %}
-          <li>{{ a.name }} <small class="muted">· {{ a.cat }}</small></li>
+  <div class="row g-3">
+
+    <aside class="col-lg-2">
+      <div class="row row-cols-4 row-cols-lg-1 g-2">
+        {% for attr in attributes %}
+        <div class="col">
+          <div class="card attribute">
+            <div class="card-body p-2">
+              <button class="attribute-roll" type="button" data-action="roll-attribute" data-attr="{{ attr }}">
+                <span class="attribute-name">{{ attr | capitalize }}</span>
+                <span class="attribute-value" data-out="attr.{{ attr }}"></span>
+              </button>
+              <input class="form-control form-control-sm mt-1" type="number" min="5" max="15"
+                     data-bind="attrs.{{ attr }}" data-type="int" value="{{ d.attrs[attr] }}" aria-label="{{ attr }} base value">
+            </div>
+          </div>
+        </div>
         {% endfor %}
+      </div>
+      <p class="small text-secondary mt-2">
+        Sum <b data-out="attrSum" data-state="attrSum"></b> / 80<br>
+        Initiative <b data-out="initiative"></b>
+      </p>
+    </aside>
+
+    <section class="col-lg-7">
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-abilities" type="button">Abilities</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-combat" type="button">Combat</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-inventory" type="button">Inventory</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-background" type="button">Background</button></li>
       </ul>
-    {% else %}
-      <p class="empty">None yet.</p>
-    {% endif %}
-  </section>
+
+      <div class="tab-content pt-3">
+
+        <div class="tab-pane fade show active" id="tab-abilities">
+          <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2" id="compendium-notice">
+            <span>The sheet only knows the names of abilities. Import your compendium to read the rules.</span>
+            <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#compendium">Import compendium</button>
+          </div>
+
+          {% for group, (label, cats) in groups.items() %}
+          <div class="section-head">
+            <h3 class="h4 mb-0">{{ label }}</h3>
+            <div class="d-flex align-items-center gap-2">
+              {% if group == "powers" %}<span class="badge text-bg-rot" data-out="learnedCorruption"></span>{% endif %}
+              {% if group == "rituals" %}<span class="badge text-bg-secondary" data-out="ritualCount"></span>{% endif %}
+              <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#add-ability" data-group="{{ group }}">+ Add</button>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-4">
+            {% for a in d.abilities %}
+            {% if a.cat in cats %}
+            {% set i = loop.index0 %}
+            <div class="col-md-6">
+              <div class="card ability h-100" data-list="abilities" data-index="{{ i }}" data-name="{{ a.name }}">
+                <div class="card-body">
+                  <div class="d-flex align-items-start gap-2">
+                    <button class="ability-name flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#ability-{{ i }}">
+                      {{ a.name }}
+                      {% if a.tag and a.tag not in ["General", "Combat", "Trait"] %}<small class="d-block text-secondary">{{ a.tag }}</small>{% endif %}
+                    </button>
+                    {% if a.name in tiered or a.custom %}
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Level">
+                      {% for lvl, letter in [(1, "N"), (2, "A"), (3, "M")] %}
+                      <button class="btn btn-outline-gold {% if a.level >= lvl %}active{% endif %}" type="button"
+                              data-action="set-level" data-level="{{ lvl }}" title="{{ ['', 'Novice', 'Adept', 'Master'][lvl] }}">{{ letter }}</button>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
+                  </div>
+
+                  <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                    <span class="badge text-bg-secondary" data-cost>{% if a.free %}free{% elif a.cat == "Ritual" %}via Ritualist{% else %}{{ xp_cost[a.level] }} XP{% endif %}</span>
+                    {% if a.cat == "Mystical" %}
+                    <button class="btn btn-sm btn-rot" type="button" data-action="cast">Cast</button>
+                    {% elif a.cat == "Ritual" %}
+                    <button class="btn btn-sm btn-rot" type="button" data-action="perform-ritual">Perform</button>
+                    {% endif %}
+                    {% if a.name == "Exceptional Attribute" %}
+                    <select class="form-select form-select-sm w-auto" data-field="attr" aria-label="Attribute">
+                      {% for attr in attributes %}
+                      <option value="{{ attr }}" {% if a.attr == attr %}selected{% endif %}>{{ attr | capitalize }}</option>
+                      {% endfor %}
+                    </select>
+                    {% endif %}
+                  </div>
+
+                  <div class="collapse" id="ability-{{ i }}">
+                    <p class="text-secondary small mt-3" data-effect></p>
+                    <ul class="list-unstyled small tiers">
+                      <li data-tier="novice" class="{% if a.level >= 1 %}have{% endif %}"></li>
+                      <li data-tier="adept" class="{% if a.level >= 2 %}have{% endif %}"></li>
+                      <li data-tier="master" class="{% if a.level >= 3 %}have{% endif %}"></li>
+                    </ul>
+                    <input class="form-control form-control-sm mb-2" data-field="note" value="{{ a.note or '' }}" placeholder="Note" aria-label="Note">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="form-check form-switch small">
+                        <input class="form-check-input" type="checkbox" id="free-{{ i }}" data-field="free" {% if a.free %}checked{% endif %}>
+                        <label class="form-check-label" for="free-{{ i }}">Free</label>
+                      </div>
+                      <button class="btn btn-sm btn-outline-danger" type="button" data-action="remove">Remove</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% if not d.abilities | selectattr("cat", "in", cats) | list %}
+            <p class="text-secondary fst-italic">Nothing here yet.</p>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="tab-pane fade" id="tab-combat">
+          <div class="section-head">
+            <h3 class="h4 mb-0">Weapons</h3>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#shop-weapons">+ Add weapon</button>
+          </div>
+          <ul class="list-group mb-4">
+            {% for w in d.weapons %}
+            <li class="list-group-item d-flex flex-wrap align-items-center gap-2" data-list="weapons" data-index="{{ loop.index0 }}">
+              <div class="flex-grow-1">
+                <div class="item-name">{{ w.name }}</div>
+                <div class="small text-secondary">
+                  {{ catalog.KIND_LABELS.get(w.kind, w.kind) }}
+                  {% for q in w.q %}<span class="badge text-bg-secondary" title="{{ catalog.QUALITIES.get(q, '') }}">{{ q }}</span>{% endfor %}
+                </div>
+                <div class="small text-secondary" data-notes></div>
+              </div>
+              <button class="btn btn-outline-gold roll-box" type="button" data-action="roll-attack">
+                <small data-attack-label>attack</small><b data-attack></b>
+              </button>
+              <button class="btn btn-outline-gold roll-box" type="button" data-action="roll-damage">
+                <small>damage</small><b data-damage></b>
+              </button>
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="weapon-{{ loop.index0 }}" data-field="equipped" {% if w.equipped %}checked{% endif %}>
+                <label class="form-check-label small" for="weapon-{{ loop.index0 }}">In hand</label>
+              </div>
+              <button class="btn-close" type="button" data-action="remove" aria-label="Remove"></button>
+            </li>
+            {% else %}
+            <li class="list-group-item text-secondary fst-italic">No weapons.</li>
+            {% endfor %}
+          </ul>
+
+          <div class="section-head">
+            <h3 class="h4 mb-0">Armor</h3>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#shop-armors">+ Add armor</button>
+          </div>
+          <ul class="list-group">
+            {% for a in d.armors %}
+            <li class="list-group-item d-flex flex-wrap align-items-center gap-2" data-list="armors" data-index="{{ loop.index0 }}">
+              <div class="flex-grow-1">
+                <div class="item-name">{{ a.name }}</div>
+                <div class="small text-secondary">
+                  {{ a.weight | capitalize }} armor
+                  {% for q in a.q %}<span class="badge text-bg-secondary" title="{{ catalog.QUALITIES.get(q, '') }}">{{ q }}</span>{% endfor %}
+                </div>
+              </div>
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="armor-{{ loop.index0 }}" data-field="equipped" {% if a.equipped %}checked{% endif %}>
+                <label class="form-check-label small" for="armor-{{ loop.index0 }}">Worn</label>
+              </div>
+              <button class="btn-close" type="button" data-action="remove" aria-label="Remove"></button>
+            </li>
+            {% else %}
+            <li class="list-group-item text-secondary fst-italic">No armor.</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="tab-pane fade" id="tab-inventory">
+          <div class="section-head">
+            <h3 class="h4 mb-0">Money</h3>
+            <span class="small text-secondary">1 thaler = 10 shillings = 100 ortegs</span>
+          </div>
+          <div class="row g-2 mb-4">
+            <div class="col-4 col-md-3">
+              <label class="form-label small" for="money-t">Thaler</label>
+              <input class="form-control" id="money-t" type="number" min="0" data-bind="money.t" data-type="int" value="{{ d.money.t }}">
+            </div>
+            <div class="col-4 col-md-3">
+              <label class="form-label small" for="money-s">Shillings</label>
+              <input class="form-control" id="money-s" type="number" min="0" data-bind="money.s" data-type="int" value="{{ d.money.s }}">
+            </div>
+            <div class="col-4 col-md-3">
+              <label class="form-label small" for="money-o">Ortegs</label>
+              <input class="form-control" id="money-o" type="number" min="0" data-bind="money.o" data-type="int" value="{{ d.money.o }}">
+            </div>
+          </div>
+
+          <div class="section-head">
+            <h3 class="h4 mb-0">Equipment</h3>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#shop-items">+ Add or buy</button>
+          </div>
+          <ul class="list-group">
+            {% for it in d["items"] %}
+            <li class="list-group-item d-flex align-items-center gap-2" data-list="items" data-index="{{ loop.index0 }}">
+              <div class="flex-grow-1">
+                <div class="item-name">{{ it.name }}</div>
+                <input class="form-control form-control-sm form-control-plaintext text-secondary" data-field="note" value="{{ it.note or '' }}" placeholder="Note" aria-label="Note">
+              </div>
+              <div class="btn-group btn-group-sm" role="group" aria-label="Quantity">
+                <button class="btn btn-outline-secondary" type="button" data-action="quantity" data-delta="-1">−</button>
+                <span class="btn btn-outline-secondary disabled" data-qty>{{ it.qty }}</span>
+                <button class="btn btn-outline-secondary" type="button" data-action="quantity" data-delta="1">+</button>
+              </div>
+              <button class="btn-close" type="button" data-action="remove" aria-label="Remove"></button>
+            </li>
+            {% else %}
+            <li class="list-group-item text-secondary fst-italic">Empty backpack.</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="tab-pane fade" id="tab-background">
+          <div class="row g-2 mb-3">
+            <div class="col-4">
+              <label class="form-label small" for="bio-age">Age</label>
+              <input class="form-control" id="bio-age" data-bind="bio.age" value="{{ d.bio.age or '' }}">
+            </div>
+            <div class="col-4">
+              <label class="form-label small" for="bio-height">Height</label>
+              <input class="form-control" id="bio-height" data-bind="bio.height" value="{{ d.bio.height or '' }}">
+            </div>
+            <div class="col-4">
+              <label class="form-label small" for="bio-weight">Weight</label>
+              <input class="form-control" id="bio-weight" data-bind="bio.weight" value="{{ d.bio.weight or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small" for="shadow">Shadow</label>
+              <input class="form-control" id="shadow" data-bind="shadow" value="{{ d.shadow or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small" for="quote">Quote</label>
+              <input class="form-control" id="quote" data-bind="quote" value="{{ d.quote or '' }}">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small" for="appearance">Appearance</label>
+            <textarea class="form-control" id="appearance" rows="3" data-bind="bio.appearance">{{ d.bio.appearance or '' }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small" for="background">Background</label>
+            <textarea class="form-control" id="background" rows="5" data-bind="bio.background">{{ d.bio.background or '' }}</textarea>
+          </div>
+          <div class="mb-4">
+            <label class="form-label small" for="goal">Personal goal</label>
+            <textarea class="form-control" id="goal" rows="2" data-bind="bio.goal">{{ d.bio.goal or '' }}</textarea>
+          </div>
+
+          <div class="section-head">
+            <h3 class="h4 mb-0">Artifacts</h3>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-action="add-artifact">+ Add artifact</button>
+          </div>
+          <ul class="list-group mb-3">
+            {% for art in d.artifacts %}
+            <li class="list-group-item" data-list="artifacts" data-index="{{ loop.index0 }}">
+              <div class="row g-2 align-items-center">
+                <div class="col-md-4"><input class="form-control" data-field="name" value="{{ art.name or '' }}" placeholder="Name" aria-label="Artifact name"></div>
+                <div class="col-md-5"><input class="form-control" data-field="powers" value="{{ art.powers or '' }}" placeholder="Powers" aria-label="Powers"></div>
+                <div class="col-8 col-md-2"><input class="form-control" type="number" min="0" data-field="corr" data-type="int" value="{{ art.corr or 0 }}" title="Permanent Corruption" aria-label="Corruption"></div>
+                <div class="col-4 col-md-1 text-end"><button class="btn-close" type="button" data-action="remove" aria-label="Remove"></button></div>
+              </div>
+            </li>
+            {% else %}
+            <li class="list-group-item text-secondary fst-italic">No artifacts.</li>
+            {% endfor %}
+          </ul>
+          <div class="mb-4 col-md-4">
+            <label class="form-label small" for="corr-extra">Extra permanent Corruption</label>
+            <input class="form-control" id="corr-extra" type="number" min="0" data-bind="corrExtra" data-type="int" value="{{ d.corrExtra or 0 }}">
+          </div>
+
+          <label class="form-label small" for="notes">Notes</label>
+          <textarea class="form-control" id="notes" rows="8" data-bind="notes">{{ d.notes or '' }}</textarea>
+        </div>
+      </div>
+    </section>
+
+    <aside class="col-lg-3">
+      <div class="card rolls">
+        <div class="card-body">
+          <h2 class="h4">Rolls</h2>
+          <div class="d-flex align-items-center gap-2 small text-secondary mb-2">
+            Test modifier
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-secondary" type="button" data-action="modifier" data-delta="-1">−</button>
+              <span class="btn btn-outline-secondary disabled" data-out="modifier">±0</span>
+              <button class="btn btn-outline-secondary" type="button" data-action="modifier" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="btn-group btn-group-sm d-flex mb-2" role="group" aria-label="Dice">
+            {% for sides in [4, 6, 8, 10, 12, 20] %}
+            <button class="btn btn-outline-secondary" type="button" data-action="roll-free" data-formula="1D{{ sides }}">d{{ sides }}</button>
+            {% endfor %}
+          </div>
+          <form class="input-group input-group-sm mb-3" id="formula-form">
+            <input class="form-control" name="formula" placeholder="2D6+1" aria-label="Dice formula">
+            <button class="btn btn-outline-secondary" type="submit">Roll</button>
+          </form>
+          <ol class="list-unstyled roll-list" id="roll-list">
+            <li class="text-secondary fst-italic small" id="roll-empty">Click an attribute, a weapon or a power to roll.</li>
+          </ol>
+        </div>
+      </div>
+    </aside>
+  </div>
 </div>
 
-<p class="hint" style="margin-top:16px">
-  The full interactive sheet (automatic calculations, tabs, dice) arrives in the next part of step 2.
-</p>
+<template id="roll-entry">
+  <li class="roll">
+    <span class="roll-label"></span>
+    <b class="roll-result"></b>
+    <small class="roll-detail"></small>
+  </li>
+</template>
+
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3">
+  <div class="toast text-bg-dark border-success" id="toast" role="status">
+    <div class="toast-body" id="toast-text"></div>
+  </div>
+</div>
+
+<div class="modal fade" id="add-ability" tabindex="-1" aria-labelledby="add-ability-title">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h4" id="add-ability-title">Add from the compendium</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input class="form-control mb-2" type="search" placeholder="Search by name…" data-search>
+        <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Filter">
+          {% for value, label in [("all", "All"), ("abilities", "Abilities"), ("powers", "Powers"), ("rituals", "Rituals"), ("traits", "Traits")] %}
+          <input type="radio" class="btn-check" name="ability-filter" id="filter-{{ value }}" value="{{ value }}" {% if loop.first %}checked{% endif %}>
+          <label class="btn btn-outline-secondary" for="filter-{{ value }}">{{ label }}</label>
+          {% endfor %}
+        </div>
+        <p class="small text-secondary">Click a name to read its rules. The buttons on the right add it at that level.</p>
+
+        <ul class="list-group">
+          {% for name, category, tag, tiered in catalog.ENTRIES %}
+          {% set group = {"General": "abilities", "Combat": "abilities", "Mystical": "powers", "Ritual": "rituals", "Trait": "traits"}[category] %}
+          <li class="list-group-item" data-entry data-name="{{ name }}" data-cat="{{ category }}" data-tag="{{ tag }}" data-group="{{ group }}">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <button class="ability-name flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#entry-{{ loop.index }}">
+                {{ name }}
+                <small class="d-block text-secondary">{{ category }}{% if tag not in ["General", "Combat", "Trait"] %} · {{ tag }}{% endif %}</small>
+              </button>
+              {% if name in owned %}
+              <span class="badge text-bg-success">On sheet</span>
+              {% elif tiered %}
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-primary" type="button" data-action="add-ability" data-level="1">+ Novice</button>
+                <button class="btn btn-outline-gold" type="button" data-action="add-ability" data-level="2">+ Adept</button>
+                <button class="btn btn-outline-gold" type="button" data-action="add-ability" data-level="3">+ Master</button>
+              </div>
+              {% else %}
+              <button class="btn btn-sm btn-primary" type="button" data-action="add-ability" data-level="1">+ Add</button>
+              {% endif %}
+            </div>
+            <div class="collapse" id="entry-{{ loop.index }}">
+              <p class="text-secondary small mt-2" data-effect></p>
+              <ul class="list-unstyled small tiers">
+                <li data-tier="novice"></li>
+                <li data-tier="adept"></li>
+                <li data-tier="master"></li>
+              </ul>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <form class="input-group mt-3" data-custom="ability">
+          <input class="form-control" name="name" placeholder="Custom ability" maxlength="100" required>
+          <select class="form-select" name="cat" aria-label="Category">
+            <option value="General">Ability</option>
+            <option value="Combat">Combat ability</option>
+            <option value="Mystical">Mystical power</option>
+            <option value="Ritual">Ritual</option>
+            <option value="Trait">Trait</option>
+          </select>
+          <button class="btn btn-outline-secondary" type="submit">Add custom</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% call shop_modal("shop-weapons", "Weapons") %}
+  {% for name, kind, die, q, cost in catalog.WEAPONS %}
+  <li class="list-group-item d-flex flex-wrap align-items-center gap-2" data-entry data-name="{{ name }}"
+      data-kind="{{ kind }}" data-die="{{ die }}" data-q="{{ q | join('|') }}" data-cost="{{ cost }}">
+    <div class="flex-grow-1">
+      <div class="item-name">{{ name }}</div>
+      <small class="text-secondary">{{ catalog.KIND_LABELS[kind] }} · {{ die }}{% if q %} · {{ q | join(", ") }}{% endif %}</small>
+    </div>
+    <small class="text-secondary">{{ catalog.money_text(cost) if cost else "free" }}</small>
+    <button class="btn btn-sm btn-outline-secondary" type="button" data-action="shop-add">Add</button>
+    {% if cost %}<button class="btn btn-sm btn-primary" type="button" data-action="shop-buy">Buy</button>{% endif %}
+  </li>
+  {% endfor %}
+{% endcall %}
+
+{% call shop_modal("shop-armors", "Armor") %}
+  {% for name, weight, q, cost in catalog.ARMORS %}
+  <li class="list-group-item d-flex flex-wrap align-items-center gap-2" data-entry data-name="{{ name }}"
+      data-weight="{{ weight }}" data-q="{{ q | join('|') }}" data-cost="{{ cost }}">
+    <div class="flex-grow-1">
+      <div class="item-name">{{ name }}</div>
+      <small class="text-secondary">{{ weight | capitalize }}{% if q %} · {{ q | join(", ") }}{% endif %}</small>
+    </div>
+    <small class="text-secondary">{{ catalog.money_text(cost) }}</small>
+    <button class="btn btn-sm btn-outline-secondary" type="button" data-action="shop-add">Add</button>
+    <button class="btn btn-sm btn-primary" type="button" data-action="shop-buy">Buy</button>
+  </li>
+  {% endfor %}
+{% endcall %}
+
+{% call shop_modal("shop-items", "Equipment") %}
+  {% for name, group, cost in catalog.ITEMS %}
+  <li class="list-group-item d-flex flex-wrap align-items-center gap-2" data-entry data-name="{{ name }}" data-cost="{{ cost }}">
+    <div class="flex-grow-1">
+      <div class="item-name">{{ name }}</div>
+      <small class="text-secondary">{{ group }}</small>
+    </div>
+    <small class="text-secondary">{{ catalog.money_text(cost) }}</small>
+    <button class="btn btn-sm btn-outline-secondary" type="button" data-action="shop-add">Add</button>
+    <button class="btn btn-sm btn-primary" type="button" data-action="shop-buy">Buy</button>
+  </li>
+  {% endfor %}
+{% endcall %}
+
+<div class="modal fade" id="compendium" tabindex="-1" aria-labelledby="compendium-title">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h4" id="compendium-title">Compendium</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          The site lists only the names of abilities, powers, rituals and traits. Import your group's
+          compendium file to read their rules. It stays saved in this browser.
+        </p>
+        <p><span class="badge text-bg-secondary" id="compendium-status">No compendium imported yet</span></p>
+        <label class="form-label" for="compendium-file">Compendium file (JSON)</label>
+        <input class="form-control mb-2" type="file" id="compendium-file" accept=".json,application/json">
+        <p class="form-text">
+          Accepted: a list <code>[{name, category, tag, effect, tiers}]</code>
+          or an object <code>{abilities, mystical_powers, rituals, traits}</code>.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-danger" type="button" data-action="clear-compendium">Remove compendium</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/json" id="sheet-data">{{ payload | tojson }}</script>
+<script>
+  // saves the sheet on the server (the offline demo uses localStorage instead)
+  window.SheetStorage = {
+    async save(payload) {
+      const response = await fetch("{{ url_for('characters.save', character_id=character.id) }}", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
+        },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json().catch(() => ({ ok: false, error: "server error" }));
+      if (!response.ok || !result.ok) throw new Error(result.error || "could not save");
+    },
+  };
+</script>
+<script src="{{ url_for('static', filename='js/rules.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sheet.js') }}"></script>
 {% endblock %}

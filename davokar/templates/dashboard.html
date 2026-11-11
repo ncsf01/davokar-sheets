@@ -1,32 +1,33 @@
-{# dashboard.html: home page for logged-in users.
-   `characters` comes from main.index(): the 5 most recently edited sheets.
-   The tables list stays a placeholder until step 3. #}
 {% extends "base.html" %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1 class="page-title">Welcome, {{ g.user.username }}</h1>
+<h1 class="mb-4">Welcome, {{ g.user.username }}</h1>
 
-<div class="grid-2">
-  <section class="card">
-    <div class="card-head">
-      <h2>My characters</h2>
-      <a class="btn btn-sm" href="{{ url_for('characters.new') }}">+ New</a>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="h4 mb-0">My characters</h2>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('characters.new') }}">+ New</a>
+      </div>
+      {% if characters %}
+        {% include "characters/_list.html" %}
+        <div class="card-footer small"><a href="{{ url_for('characters.index') }}">See all characters</a></div>
+      {% else %}
+        <div class="card-body text-secondary fst-italic">
+          No characters yet. <a href="{{ url_for('characters.new') }}">Create your first one.</a>
+        </div>
+      {% endif %}
     </div>
-    {% if characters %}
-      {% include "characters/_list.html" %}
-      <p class="card-foot"><a href="{{ url_for('characters.index') }}">See all characters</a></p>
-    {% else %}
-      <p class="empty">No characters yet. <a href="{{ url_for('characters.new') }}">Create your first one.</a></p>
-    {% endif %}
-  </section>
+  </div>
 
-  <section class="card">
-    <div class="card-head">
-      <h2>My tables</h2>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="h4 mb-0">My tables</h2></div>
+      <div class="card-body text-secondary fst-italic">You have not joined any table yet.</div>
     </div>
-    <p class="empty">You have not joined any table yet.</p>
-  </section>
+  </div>
 </div>
 {% endblock %}

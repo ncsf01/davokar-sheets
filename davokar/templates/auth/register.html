@@ -1,45 +1,48 @@
-{# auth/register.html: sign-up form. Handled by auth.register() in auth.py.
-   `form` brings back what the user typed, so a validation error does not
-   erase the username and email fields (passwords are never sent back). #}
 {% extends "base.html" %}
 
 {% block title %}Sign up{% endblock %}
 
 {% block content %}
-<section class="auth-box card">
-  <h1>Create an account</h1>
+<div class="row justify-content-center">
+  <div class="col-sm-9 col-md-6 col-lg-4">
+    <div class="card">
+      <div class="card-body p-4">
+        <h1 class="h2 mb-4">Create an account</h1>
 
-  <form method="post" class="form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <label class="field">
-      <span>Username</span>
-      <input type="text" name="username" value="{{ form.username }}" autocomplete="username"
-             minlength="3" maxlength="30" pattern="[A-Za-z0-9_\-]+" required autofocus>
-      <small class="hint">3 to 30 characters: letters, numbers, _ or -</small>
-    </label>
+          <div class="mb-3">
+            <label class="form-label" for="username">Username</label>
+            <input class="form-control" id="username" name="username" value="{{ form.username }}" autocomplete="username"
+                   minlength="3" maxlength="30" pattern="[A-Za-z0-9_\-]+" required autofocus>
+            <div class="form-text">3 to 30 characters: letters, numbers, _ or -</div>
+          </div>
 
-    <label class="field">
-      <span>Email</span>
-      <input type="email" name="email" value="{{ form.email }}" autocomplete="email" maxlength="255" required>
-    </label>
+          <div class="mb-3">
+            <label class="form-label" for="email">Email</label>
+            <input class="form-control" id="email" name="email" type="email" value="{{ form.email }}" autocomplete="email" maxlength="255" required>
+          </div>
 
-    <label class="field">
-      <span>Password</span>
-      <input type="password" name="password" autocomplete="new-password" minlength="8" required>
-      <small class="hint">At least 8 characters</small>
-    </label>
+          <div class="mb-3">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-control" id="password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+            <div class="form-text">At least 8 characters</div>
+          </div>
 
-    <label class="field">
-      <span>Confirm password</span>
-      <input type="password" name="confirm" autocomplete="new-password" minlength="8" required>
-    </label>
+          <div class="mb-4">
+            <label class="form-label" for="confirm">Confirm password</label>
+            <input class="form-control" id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="8" required>
+          </div>
 
-    {# The browser checks minlength/pattern/required before sending, but the
-       server checks everything again in auth.py: browser checks can be skipped. #}
-    <button class="btn btn-gold btn-block" type="submit">Create account</button>
-  </form>
+          <button class="btn btn-primary w-100" type="submit">Create account</button>
+        </form>
 
-  <p class="muted">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
-</section>
+        <p class="text-center text-secondary mt-3 mb-0">
+          Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
