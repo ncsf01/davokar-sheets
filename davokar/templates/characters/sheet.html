@@ -110,11 +110,16 @@
             <div class="progress-bar bg-rot" data-out-width="corruption"></div>
           </div>
           <div class="d-flex align-items-center gap-1 small text-secondary">
-            Temp.
+            <span class="me-auto">Temporary</span>
             <button class="btn btn-sm btn-outline-secondary py-0" type="button" data-action="corruption" data-delta="-1">−</button>
             <b data-out="corruptionTemporary"></b>
             <button class="btn btn-sm btn-outline-secondary py-0" type="button" data-action="corruption" data-delta="1">+</button>
-            <span class="ms-1">Perm. <b data-out="corruptionPermanent"></b></span>
+          </div>
+          <div class="d-flex align-items-center gap-1 small text-secondary mt-1">
+            <span class="me-auto" title="Learned powers + artifacts + extra permanent Corruption">Permanent</span>
+            <button class="btn btn-sm btn-outline-secondary py-0" type="button" data-action="corruption-permanent" data-delta="-1">−</button>
+            <b data-out="corruptionPermanent"></b>
+            <button class="btn btn-sm btn-outline-secondary py-0" type="button" data-action="corruption-permanent" data-delta="1">+</button>
           </div>
           <div class="small text-secondary">threshold <span data-out="corruptionThreshold"></span></div>
         </div>
@@ -429,7 +434,7 @@
             <button class="btn btn-link btn-sm p-0" type="button" data-action="clear-rolls">Clear</button>
           </div>
           <div class="d-flex align-items-center gap-2 small text-secondary mb-2">
-            Test modifier
+            <span title="Added to the target of d20 tests (attributes, attacks, defense). Dice rolls ignore it.">d20 test modifier</span>
             <div class="btn-group btn-group-sm">
               <button class="btn btn-outline-secondary" type="button" data-action="modifier" data-delta="-1">−</button>
               <span class="btn btn-outline-secondary disabled" data-out="modifier">±0</span>
@@ -442,7 +447,7 @@
             {% endfor %}
           </div>
           <form class="input-group input-group-sm mb-3" id="formula-form">
-            <input class="form-control" name="formula" placeholder="2D6+1" aria-label="Dice formula">
+            <input class="form-control" name="formula" placeholder="e.g. 2d6+1" aria-label="Dice formula">
             <button class="btn btn-outline-secondary" type="submit">Roll</button>
           </form>
           <ol class="list-unstyled roll-list" id="roll-list">

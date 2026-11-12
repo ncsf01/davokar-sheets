@@ -349,6 +349,13 @@
       render();
       changed();
     },
+    // the part from powers and artifacts is calculated, so the buttons change the extra field
+    "corruption-permanent"(el) {
+      sheet.corrExtra = Math.max(0, R.toInt(sheet.corrExtra) + R.toInt(el.dataset.delta));
+      $("#corr-extra").value = sheet.corrExtra;
+      render();
+      changed();
+    },
     "end-scene"() {
       sheet.corrTemp = 0;  // temporary corruption fades at the end of a scene
       render();
@@ -534,6 +541,7 @@
     event.preventDefault();
     const formula = event.target.formula.value.trim().toUpperCase();
     if (/^(\d*D\d+|\d+)([+-](\d*D\d+|\d+))*$/.test(formula)) diceRoll("Free roll", formula);
+    else toast("Type a dice formula first, like 2d6+1.");
   });
 
   for (const form of $$("[data-custom]")) {
