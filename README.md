@@ -3,10 +3,15 @@
 # Davokar Sheets
 
 Online character sheets for the **Symbaroum** tabletop RPG, inspired by D&D Beyond and Demiplane.
+The sheet does the math so the table can keep playing.
 
-The sheet does the math for you: **Toughness, Pain Threshold, Defense, Armor, Corruption and
-Experience** are calculated from attributes, abilities, powers and equipment. Players create
-accounts, join their group's *table* with an invite code and share dice rolls.
+![Taking damage drops Toughness, corruption fills the bar, and attribute, attack and damage rolls land in the side panel](docs/davokar-sheet.gif)
+
+*Nothing above was typed twice: Toughness, Defense, Armor, Corruption and Experience all follow
+from the attributes, abilities and equipment below them.*
+
+**[Try the offline demo](https://ncsf01.github.io/davokar-sheets/)** — runs in the browser, no account needed.
+*(The demo still shows the previous interface, in Portuguese. It is being rebuilt on the current one.)*
 
 > **Unofficial fan project.** Symbaroum is a trademark of Free League Publishing.
 > This repository contains **only the names** of abilities, powers, rituals and traits, never the
@@ -14,97 +19,62 @@ accounts, join their group's *table* with an invite code and share dice rolls.
 
 ---
 
-## Two versions
+## What it does
 
-| | **Demo** (`demo/`) | **App** (`davokar/`) |
-|---|---|---|
-| Runs on | any browser, no installation | a server (Flask + MariaDB) |
-| Data saved in | the browser (`localStorage`) | the database |
-| Accounts and tables | no | yes |
-| Share characters | export / import a `.json` file | automatic, inside the table |
+- **Calculates as you play.** Toughness, Pain Threshold, Defense, Armor, Corruption and Experience
+  update from attributes, abilities, powers and equipment, with no save button.
+- **Rolls dice.** Attribute tests, attacks, damage and casting corruption, with the last 30 rolls
+  kept in a side panel.
+- **Keeps accounts.** Sign up, log in, and a private list of your own characters.
+- **Shows a public showcase.** The home page lists every character created on the site.
+- **Imports your compendium.** Load a JSON file to read the rules text, stored in your browser only.
+- **Exports a character** as `.json`, to carry between the demo and the server.
 
-The demo is also the fallback when there is no server available.
+## Built with
 
----
+| Layer | Tools |
+|---|---|
+| Back end | Python 3.12, Flask, Jinja, PyMySQL |
+| Front end | Bootstrap 5, vanilla JavaScript (no build step) |
+| Database | MySQL (AWS) / MariaDB (development) |
+| Serving | Gunicorn behind Nginx |
+| Infrastructure | Docker, AWS EC2 |
 
-## Architecture (target)
+## Architecture on AWS
 
-```
-                Elastic IP
-                    │
-        ┌───────────┴────────────┐
-   EC2 app-1                  EC2 app-2
-   Nginx (load balancer)      Nginx (standby)
-   ├─ container: Flask        ├─ container: Flask
-   └─ container: Flask        └─ container: Flask
-        └───────────┬────────────┘
-   EC2 db-1  ── replication ──►  EC2 db-2
-   MariaDB (primary)             MariaDB (replica)
-```
-
-- **Nginx** spreads requests across the four Flask containers and skips any that stop responding.
-- The **Elastic IP** is the site's fixed address. If app-1 fails, it is moved to app-2.
-- **MariaDB replication** keeps a full copy of the data on db-2.
-
-### How a request flows inside the app
+Two EC2 instances in the same VPC. The application is reachable from the internet; the database
+is not.
 
 ```
-Browser ──HTTP──► Werkzeug ──► Flask route (Python) ──► PyMySQL ──► MariaDB
-   ▲                                   │
-   └────────── HTML ◄── Jinja template ┘
+                    Internet
+                        │  port 5000 (and 80)
+        ┌───────────────▼────────────────┐
+        │  EC2 · application             │
+        │                                │
+        │   ┌─────────┐    ┌──────────┐  │
+        │   │  Nginx  │───►│ Flask #1 │  │   Gunicorn,
+        │   │   (LB)  │───►│ Flask #2 │  │   2 workers each
+        │   └─────────┘    └──────────┘  │
+        │        three Docker containers │
+        └───────────────┬────────────────┘
+                        │  private IP, port 3306
+        ┌───────────────▼────────────────┐
+        │  EC2 · database                │
+        │  MySQL, bound to the private   │
+        │  IP, user restricted to the    │
+        │  application's security group  │
+        └────────────────────────────────┘
 ```
 
-- **Werkzeug** receives the HTTP request and builds the `request` object.
-- **Flask** routes the URL to a Python function (a *view*).
-- **PyMySQL** runs SQL queries against **MariaDB**.
-- **Jinja** fills an HTML template with the data and returns the finished page.
+- **Nginx** round-robins requests across the two Flask containers and fails over in 2 seconds if
+  one stops answering. Only Nginx publishes a port.
+- **The database has no route from the internet.** Its security group accepts port 3306 only from
+  the application's security group, MySQL binds to the private IP, and the database user is
+  restricted to that one address with the minimum privileges it needs.
+- **The app keeps no state**, so either container can serve any request: the session lives in a
+  signed cookie and the data in MySQL.
 
----
-
-## Project structure
-
-```
-davokar-sheets/
-├── davokar/                 Flask package
-│   ├── __init__.py          create_app(): the application factory
-│   ├── config.py            settings read from environment variables
-│   ├── db.py                PyMySQL connection, query helpers, `init-db` command
-│   ├── schema.sql           CREATE TABLE statements
-│   ├── security.py          CSRF protection for forms
-│   ├── auth.py              blueprint: sign up, log in, log out
-│   ├── characters.py        blueprint: character list, creation, sheet, autosave
-│   ├── catalog.py           names of abilities and equipment tables (no rules text)
-│   ├── main.py              blueprint: home page and dashboard
-│   ├── templates/           Jinja + Bootstrap 5 templates (base.html holds navbar and footer)
-│   └── static/
-│       ├── css/style.css    colors and fonts on top of Bootstrap's dark theme
-│       └── js/
-│           ├── rules.js     Symbaroum rules as pure functions (Defense, Corruption...)
-│           └── sheet.js     fills calculated values, handles buttons, autosaves
-├── demo/                    offline version (no server)
-├── Dockerfile               image of the app (Gunicorn)
-├── nginx/default.conf       Nginx load balancer config
-├── docker-compose.yml       development database (MariaDB in Docker)
-├── wsgi.py                  production entry point (Gunicorn)
-├── requirements.txt         Python dependencies
-├── .env.example             template for the .env file
-└── LICENSE                  AGPL-3.0
-```
-
----
-
-## Running the demo
-
-Open `demo/index.html` in a browser. (The demo interface is still in Portuguese: it moves to the new
-English-first structure in a later step.)
-
-- **📖 Compendium**: import a compendium JSON to see rules text. Accepted formats: a flat list
-  `[{name, category, tag, effect, tiers}]` or a grouped object `{abilities, mystical_powers, rituals, traits}`.
-- **⋯ More → Export**: saves the character as a `.json` file. Import it back from the same menu.
-
----
-
-## Running the app locally
+## Running it locally
 
 **Requirements:** Python 3.10+, Docker with Docker Compose.
 
@@ -127,24 +97,71 @@ flask --app davokar init-db
 flask --app davokar run --debug
 ```
 
-Open http://127.0.0.1:5000.
+Open http://127.0.0.1:5000. To stop the database: `docker compose down` (the data stays in a
+Docker volume).
 
-To stop the database: `docker compose down` (the data is kept in a Docker volume).
+To run it the way it runs in production, build the image and put Nginx in front:
 
----
+```bash
+docker build -t davokar-sheets:1.0 .
+docker network create davokar-net
+docker run -d --name davokar-app1 --network davokar-net --env-file .env davokar-sheets:1.0
+docker run -d --name davokar-app2 --network davokar-net --env-file .env davokar-sheets:1.0
+docker run -d --name davokar-nginx --network davokar-net -p 5000:80 \
+  -v "$PWD/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.27
+```
 
-## Roadmap
+## Project structure
+
+```
+davokar-sheets/
+├── davokar/                 Flask package
+│   ├── __init__.py          create_app(): the application factory
+│   ├── config.py            settings read from environment variables
+│   ├── db.py                PyMySQL connection, query helpers, `init-db` command
+│   ├── schema.sql           CREATE TABLE statements
+│   ├── security.py          CSRF protection for forms
+│   ├── auth.py              blueprint: sign up, log in, log out
+│   ├── characters.py        blueprint: character list, creation, sheet, autosave
+│   ├── catalog.py           names of abilities and equipment tables (no rules text)
+│   ├── main.py              blueprint: home page, dashboard and public showcase
+│   ├── templates/           Jinja + Bootstrap 5 (base.html holds navbar and footer)
+│   └── static/
+│       ├── css/style.css    colors and fonts on top of Bootstrap's dark theme
+│       └── js/
+│           ├── rules.js     Symbaroum rules as pure functions (Defense, Corruption...)
+│           └── sheet.js     fills calculated values, handles buttons, autosaves
+├── demo/                    offline version (no server)
+├── Dockerfile               image of the app (Gunicorn)
+├── nginx/default.conf       Nginx load balancer config
+├── docker-compose.yml       development database (MariaDB in Docker)
+├── wsgi.py                  production entry point (Gunicorn)
+├── requirements.txt         pinned Python dependencies
+├── .env.example             template for the .env file
+└── LICENSE                  AGPL-3.0
+```
+
+## Status
+
+The app works end to end: accounts, character creation, the interactive sheet with autosave, dice
+rolls and the public showcase. It has been deployed on AWS as described above, with Docker, the
+Nginx load balancer and MySQL on a separate instance.
+
+Next up:
+
+- [ ] Tables: create, invite code, members, shared compendium
+- [ ] Shared dice rolls
+- [ ] Rebuild the offline demo on the current interface
+- [ ] English / Portuguese language switch
+- [ ] Installable desktop app, backed by SQLite
+
+Done so far:
 
 - [x] Offline demo with compendium import and character export
 - [x] Accounts: sign up, log in, log out
-- [x] Characters saved in the database, interactive sheet with autosave
-- [ ] Tables: create, invite code, members, shared compendium
-- [ ] Shared dice rolls
-- [ ] English / Portuguese language switch
-- [x] Docker image for the app, Nginx load balancing
-- [ ] Deployment on AWS EC2 with MariaDB replication
-
----
+- [x] Characters in the database, interactive sheet with autosave
+- [x] Docker image, Nginx load balancing across two containers
+- [x] Deployment on AWS EC2 with an isolated database instance
 
 ## License
 

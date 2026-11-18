@@ -2,11 +2,16 @@
 
 # Davokar Sheets
 
-Fichas de personagem online para o RPG de mesa **Symbaroum**, inspiradas no D&D Beyond e no Demiplane.
+Fichas de personagem online para o RPG de mesa **Symbaroum**, inspiradas no D&D Beyond e no
+Demiplane. A ficha faz as contas para a mesa poder continuar jogando.
 
-A ficha faz as contas por você: **Resistência, Limiar de Dor, Defesa, Armadura, Corrupção e
-Experiência** são calculadas a partir dos atributos, habilidades, poderes e equipamentos. Os jogadores
-criam conta, entram na *mesa* do grupo com um código de convite e compartilham as rolagens de dados.
+![Levar dano derruba a Resistência, a corrupção enche a barra, e as rolagens de atributo, ataque e dano caem no painel lateral](docs/davokar-sheet.gif)
+
+*Nada ali foi digitado duas vezes: Resistência, Defesa, Armadura, Corrupção e Experiência saem dos
+atributos, habilidades e equipamentos logo abaixo.*
+
+**[Experimente a demo offline](https://ncsf01.github.io/davokar-sheets/)** — roda no navegador, sem criar conta.
+*(A demo ainda mostra a interface anterior, em português. Ela está sendo refeita na atual.)*
 
 > **Projeto de fã, não oficial.** Symbaroum é marca registrada da Free League Publishing.
 > Este repositório contém **apenas os nomes** de habilidades, poderes, rituais e traços, nunca o
@@ -14,97 +19,61 @@ criam conta, entram na *mesa* do grupo com um código de convite e compartilham 
 
 ---
 
-## Duas versões
+## O que ele faz
 
-| | **Demo** (`demo/`) | **App** (`davokar/`) |
-|---|---|---|
-| Roda em | qualquer navegador, sem instalar nada | um servidor (Flask + MariaDB) |
-| Dados salvos em | no navegador (`localStorage`) | no banco de dados |
-| Contas e mesas | não | sim |
-| Compartilhar fichas | exportar / importar arquivo `.json` | automático, dentro da mesa |
+- **Calcula enquanto você joga.** Resistência, Limiar de Dor, Defesa, Armadura, Corrupção e
+  Experiência saem dos atributos, habilidades, poderes e equipamentos, sem botão de salvar.
+- **Rola dados.** Testes de atributo, ataques, dano e corrupção por conjuração, com as últimas 30
+  rolagens guardadas num painel lateral.
+- **Tem contas.** Cadastro, login e uma lista particular dos seus personagens.
+- **Mostra uma vitrine pública.** A página inicial lista todos os personagens criados no site.
+- **Importa o seu compêndio.** Um arquivo JSON traz o texto das regras, guardado só no seu navegador.
+- **Exporta o personagem** em `.json`, para levar entre a demo e o servidor.
 
-A demo também serve de reserva quando não houver servidor disponível.
+## Feito com
 
----
+| Camada | Ferramentas |
+|---|---|
+| Back-end | Python 3.12, Flask, Jinja, PyMySQL |
+| Front-end | Bootstrap 5, JavaScript puro (sem etapa de build) |
+| Banco | MySQL (AWS) / MariaDB (desenvolvimento) |
+| Servidor | Gunicorn atrás do Nginx |
+| Infraestrutura | Docker, AWS EC2 |
 
-## Arquitetura (objetivo)
+## Arquitetura na AWS
 
-```
-                IP elástico
-                    │
-        ┌───────────┴────────────┐
-   EC2 app-1                  EC2 app-2
-   Nginx (balanceador)        Nginx (reserva)
-   ├─ container: Flask        ├─ container: Flask
-   └─ container: Flask        └─ container: Flask
-        └───────────┬────────────┘
-   EC2 db-1  ── replicação ──►  EC2 db-2
-   MariaDB (principal)          MariaDB (réplica)
-```
-
-- O **Nginx** distribui os acessos entre os quatro containers Flask e pula os que pararem de responder.
-- O **IP elástico** é o endereço fixo do site. Se a app-1 cair, ele é movido para a app-2.
-- A **replicação do MariaDB** mantém uma cópia completa dos dados na db-2.
-
-### Como uma requisição passa pelo app
+Duas instâncias EC2 na mesma VPC. A aplicação é alcançável pela internet; o banco não é.
 
 ```
-Navegador ──HTTP──► Werkzeug ──► rota do Flask (Python) ──► PyMySQL ──► MariaDB
-    ▲                                    │
-    └────────── HTML ◄── template Jinja ─┘
+                    Internet
+                        │  porta 5000 (e 80)
+        ┌───────────────▼────────────────┐
+        │  EC2 · aplicação               │
+        │                                │
+        │   ┌─────────┐    ┌──────────┐  │
+        │   │  Nginx  │───►│ Flask #1 │  │   Gunicorn,
+        │   │   (LB)  │───►│ Flask #2 │  │   2 workers cada
+        │   └─────────┘    └──────────┘  │
+        │        três containers Docker  │
+        └───────────────┬────────────────┘
+                        │  IP privado, porta 3306
+        ┌───────────────▼────────────────┐
+        │  EC2 · banco                   │
+        │  MySQL, escutando só no IP     │
+        │  privado, usuário restrito ao  │
+        │  security group da aplicação   │
+        └────────────────────────────────┘
 ```
 
-- O **Werkzeug** recebe a requisição HTTP e monta o objeto `request`.
-- O **Flask** liga a URL a uma função Python (uma *view*).
-- O **PyMySQL** executa as consultas SQL no **MariaDB**.
-- O **Jinja** preenche um template HTML com os dados e devolve a página pronta.
+- **O Nginx** reveza as requisições entre os dois containers Flask e, se um parar de responder,
+  passa para o outro em 2 segundos. Só o Nginx publica porta.
+- **O banco não tem caminho a partir da internet.** O security group dele aceita a porta 3306
+  apenas vinda do security group da aplicação, o MySQL escuta só no IP privado, e o usuário do
+  banco é restrito a esse endereço, com os privilégios mínimos.
+- **A aplicação não guarda estado**, então qualquer container atende qualquer requisição: a sessão
+  vive num cookie assinado e os dados, no MySQL.
 
----
-
-## Estrutura do projeto
-
-```
-davokar-sheets/
-├── davokar/                 pacote Flask
-│   ├── __init__.py          create_app(): a application factory
-│   ├── config.py            configurações lidas das variáveis de ambiente
-│   ├── db.py                conexão PyMySQL, funções de consulta, comando `init-db`
-│   ├── schema.sql           comandos CREATE TABLE
-│   ├── security.py          proteção CSRF dos formulários
-│   ├── auth.py              blueprint: cadastro, login, logout
-│   ├── characters.py        blueprint: lista de fichas, criação, ficha, salvamento automático
-│   ├── catalog.py           nomes de habilidades e tabelas de equipamento (sem texto de regras)
-│   ├── main.py              blueprint: página inicial e painel
-│   ├── templates/           templates Jinja + Bootstrap 5 (base.html tem a navbar e o footer)
-│   └── static/
-│       ├── css/style.css    cores e fontes por cima do tema escuro do Bootstrap
-│       └── js/
-│           ├── rules.js     regras de Symbaroum como funções puras (Defesa, Corrupção...)
-│           └── sheet.js     preenche os valores calculados, cuida dos botões, salva sozinho
-├── demo/                    versão offline (sem servidor)
-├── Dockerfile               imagem do app (Gunicorn)
-├── nginx/default.conf       configuração do balanceador Nginx
-├── docker-compose.yml       banco de desenvolvimento (MariaDB no Docker)
-├── wsgi.py                  ponto de entrada em produção (Gunicorn)
-├── requirements.txt         dependências Python
-├── .env.example             modelo do arquivo .env
-└── LICENSE                  AGPL-3.0
-```
-
----
-
-## Rodando a demo
-
-Abra `demo/index.html` no navegador. (A interface da demo ainda está em português: ela passa para a
-estrutura nova, com inglês primeiro, numa etapa futura.)
-
-- **📖 Compêndio**: importa um JSON de compêndio para ver o texto das regras. Formatos aceitos: lista
-  `[{name, category, tag, effect, tiers}]` ou objeto agrupado `{abilities, mystical_powers, rituals, traits}`.
-- **⋯ Mais → Exportar ficha**: salva a ficha como arquivo `.json`. Para importar de volta, use o mesmo menu.
-
----
-
-## Rodando o app no seu computador
+## Rodando no seu computador
 
 **Pré-requisitos:** Python 3.10+, Docker com Docker Compose.
 
@@ -112,7 +81,7 @@ estrutura nova, com inglês primeiro, numa etapa futura.)
 # 1. Configurações: copie o modelo e troque as senhas
 cp .env.example .env
 
-# 2. Suba o banco de dados (MariaDB num container)
+# 2. Suba o banco (MariaDB num container)
 docker compose up -d
 
 # 3. Ambiente virtual Python e dependências
@@ -127,24 +96,71 @@ flask --app davokar init-db
 flask --app davokar run --debug
 ```
 
-Acesse http://127.0.0.1:5000.
+Acesse http://127.0.0.1:5000. Para parar o banco: `docker compose down` (os dados continuam num
+volume do Docker).
 
-Para parar o banco: `docker compose down` (os dados continuam guardados num volume do Docker).
+Para rodar do jeito que roda em produção, construa a imagem e coloque o Nginx na frente:
 
----
+```bash
+docker build -t davokar-sheets:1.0 .
+docker network create davokar-net
+docker run -d --name davokar-app1 --network davokar-net --env-file .env davokar-sheets:1.0
+docker run -d --name davokar-app2 --network davokar-net --env-file .env davokar-sheets:1.0
+docker run -d --name davokar-nginx --network davokar-net -p 5000:80 \
+  -v "$PWD/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.27
+```
 
-## Próximos passos
+## Estrutura do projeto
+
+```
+davokar-sheets/
+├── davokar/                 pacote Flask
+│   ├── __init__.py          create_app(): a application factory
+│   ├── config.py            configurações lidas das variáveis de ambiente
+│   ├── db.py                conexão PyMySQL, funções de consulta, comando `init-db`
+│   ├── schema.sql           comandos CREATE TABLE
+│   ├── security.py          proteção CSRF dos formulários
+│   ├── auth.py              blueprint: cadastro, login, logout
+│   ├── characters.py        blueprint: lista de fichas, criação, ficha, salvamento automático
+│   ├── catalog.py           nomes de habilidades e tabelas de equipamento (sem texto de regras)
+│   ├── main.py              blueprint: página inicial, painel e vitrine pública
+│   ├── templates/           Jinja + Bootstrap 5 (base.html tem a navbar e o rodapé)
+│   └── static/
+│       ├── css/style.css    cores e fontes por cima do tema escuro do Bootstrap
+│       └── js/
+│           ├── rules.js     regras de Symbaroum como funções puras (Defesa, Corrupção...)
+│           └── sheet.js     preenche os valores calculados, cuida dos botões, salva sozinho
+├── demo/                    versão offline (sem servidor)
+├── Dockerfile               imagem do app (Gunicorn)
+├── nginx/default.conf       configuração do balanceador Nginx
+├── docker-compose.yml       banco de desenvolvimento (MariaDB no Docker)
+├── wsgi.py                  ponto de entrada em produção (Gunicorn)
+├── requirements.txt         dependências Python, com versões fixas
+├── .env.example             modelo do arquivo .env
+└── LICENSE                  AGPL-3.0
+```
+
+## Status
+
+O app funciona de ponta a ponta: contas, criação de personagem, a ficha interativa com salvamento
+automático, rolagens de dados e a vitrine pública. Foi publicado na AWS como descrito acima, com
+Docker, o balanceamento pelo Nginx e o MySQL numa instância separada.
+
+A seguir:
+
+- [ ] Mesas: criar, código de convite, membros, compêndio compartilhado
+- [ ] Rolagens de dados compartilhadas
+- [ ] Refazer a demo offline na interface atual
+- [ ] Botão de idioma inglês / português
+- [ ] Aplicativo instalável, com SQLite
+
+Já pronto:
 
 - [x] Demo offline com importação de compêndio e exportação de ficha
 - [x] Contas: cadastro, login, logout
-- [x] Fichas salvas no banco de dados, ficha interativa com salvamento automático
-- [ ] Mesas: criar, código de convite, membros, compêndio compartilhado
-- [ ] Rolagens de dados compartilhadas
-- [ ] Botão de idioma inglês / português
-- [x] Imagem Docker do app, balanceamento com Nginx
-- [ ] Deploy na AWS EC2 com replicação do MariaDB
-
----
+- [x] Fichas no banco, ficha interativa com salvamento automático
+- [x] Imagem Docker, balanceamento com Nginx entre dois containers
+- [x] Publicação na AWS EC2 com o banco numa instância isolada
 
 ## Licença
 
